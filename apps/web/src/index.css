@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 340 30% 96%;
+    --foreground: 340 60% 25%;
+
+    --card: 340 25% 98%;
+    --card-foreground: 340 60% 25%;
+
+    --popover: 340 25% 98%;
+    --popover-foreground: 340 60% 25%;
+
+    --primary: 340 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 340 30% 92%;
+    --secondary-foreground: 340 60% 35%;
+
+    --muted: 340 20% 90%;
+    --muted-foreground: 340 30% 50%;
+
+    --accent: 340 60% 90%;
+    --accent-foreground: 340 70% 40%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 340 25% 88%;
+    --input: 340 25% 88%;
+    --ring: 340 70% 45%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens for t3 clone */
+    --sidebar-bg: 340 35% 94%;
+    --sidebar-gradient-start: 340 40% 95%;
+    --sidebar-gradient-end: 320 35% 92%;
+    --chat-bg: 0 0% 100%;
+    --pill-bg: 340 35% 96%;
+    --pill-border: 340 40% 85%;
+    --input-bg: 340 25% 97%;
+    --suggestion-hover: 340 35% 94%;
+  }
+
+  .dark {
+    --background: 240 10% 8%;
+    --foreground: 340 30% 90%;
+
+    --card: 240 10% 10%;
+    --card-foreground: 340 30% 90%;
+
+    --popover: 240 10% 10%;
+    --popover-foreground: 340 30% 90%;
+
+    --primary: 340 65% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 10% 15%;
+    --secondary-foreground: 340 30% 85%;
+
+    --muted: 240 10% 18%;
+    --muted-foreground: 340 20% 60%;
+
+    --accent: 340 50% 20%;
+    --accent-foreground: 340 60% 80%;
+
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 18%;
+    --input: 240 10% 18%;
+    --ring: 340 65% 55%;
+
+    --sidebar-bg: 240 10% 6%;
+    --sidebar-gradient-start: 240 10% 8%;
+    --sidebar-gradient-end: 280 15% 10%;
+    --chat-bg: 240 10% 8%;
+    --pill-bg: 240 10% 12%;
+    --pill-border: 340 40% 25%;
+    --input-bg: 240 10% 12%;
+    --suggestion-hover: 240 10% 14%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .sidebar-gradient {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--sidebar-gradient-start)) 0%,
+      hsl(var(--sidebar-gradient-end)) 100%
+    );
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 55% 55%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .input-glow:focus-within {
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15),
+                0 4px 20px hsl(var(--primary) / 0.1);
+  }
+
+  .pill-hover {
+    transition: all 0.2s ease;
+  }
+
+  .pill-hover:hover {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--primary) / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .suggestion-item {
+    transition: all 0.15s ease;
+  }
+
+  .suggestion-item:hover {
+    background: hsl(var(--suggestion-hover));
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .slide-in {
+    animation: slideIn 0.25s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}

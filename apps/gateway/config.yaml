@@ -1,0 +1,41 @@
+# Iron Claw Configuration
+# Secure configuration - no secrets in this file
+
+# === Agent Settings ===
+agent:
+  max_steps: 30
+  reasoning: true
+  after_sleep_action: 1.5
+
+# === Package Whitelist (Security) ===
+# Only these apps can be accessed by the agent
+safe_packages:
+  - com.android.chrome
+  - com.google.android.calendar
+  - com.google.android.deskclock
+  - com.google.android.apps.nexuslauncher
+  - com.google.android.gm  # Gmail
+  - com.android.documentsui  # File picker
+
+# === Alarm Settings ===
+alarm:
+  default_label: "Iron Claw Reminder"
+  skip_ui: true
+
+# === Vapi Assistant Settings ===
+vapi:
+  voice_provider: "11labs"
+  voice_id: "rachel"
+  transcriber_provider: "deepgram"
+  transcriber_model: "nova-2"
+  max_call_duration: 300  # 5 minutes
+
+# === Job Hunter Settings ===
+job_hunter:
+  max_applications_per_session: 5
+  screenshot_interval: 2  # seconds
+
+# === Tab Manager Settings ===
+tab_manager:
+  max_tabs_to_close: 10  # Maximum tabs to close in one cleanup session
+  default_days_old: 7    # Default age for closing old tabs

@@ -1,0 +1,5 @@
+# config.yaml
+
+duolingo_package_name: "com.duolingo"
+check_interval_seconds: 10
+daily_bonus_cooldown_seconds: 86400 # 24 hours

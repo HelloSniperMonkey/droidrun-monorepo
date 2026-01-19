@@ -1,0 +1,15 @@
+[project]
+name = "ironclaw-vapi"
+version = "0.1.0"
+description = "Vapi voice AI client for Iron Claw"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ironclaw_vapi"]
