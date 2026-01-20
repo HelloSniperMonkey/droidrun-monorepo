@@ -4,6 +4,7 @@ Handles Chrome tab organization, cleanup, and session management.
 """
 
 import logging
+import asyncio
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -18,6 +19,75 @@ router = APIRouter()
 # In-memory task storage for async execution
 # Format: {task_id: {status, steps, message, error, started_at, completed_at}}
 task_storage: Dict[str, Dict[str, Any]] = {}
+
+
+# ============ Helper Functions ============
+
+
+async def run_agent_task_background(task_id: str, goal: str):
+    """
+    Run an IronClaw agent task in the background and update task_storage.
+    This allows real-time step tracking via the /status endpoint.
+    """
+    try:
+        from ..agents.ironclaw_agent import create_ironclaw_agent
+
+        logger.info(f"[{task_id}] Starting agent task: {goal[:50]}...")
+
+        # Create and run agent
+        agent = await create_ironclaw_agent(goal=goal)
+        result = await agent.run()
+
+        logger.info(f"[{task_id}] Agent result keys: {list(result.keys())}")
+        logger.info(
+            f"[{task_id}] Raw steps type: {type(result.get('steps'))}, value: {result.get('steps')}"
+        )
+
+        # Extract steps and convert to frontend format
+        raw_steps = result.get("steps", [])
+        formatted_steps = []
+
+        if raw_steps:
+            total_steps = len(raw_steps)
+            for i, step in enumerate(raw_steps, 1):
+                if isinstance(step, str):
+                    formatted_steps.append(
+                        {"step_number": i, "total_steps": total_steps, "description": step}
+                    )
+                elif isinstance(step, dict):
+                    # Already formatted or has custom structure
+                    formatted_steps.append(
+                        {
+                            "step_number": step.get("step_number", i),
+                            "total_steps": step.get("total_steps", total_steps),
+                            "description": step.get("description", str(step)),
+                        }
+                    )
+
+        # Update task storage with final result
+        task_storage[task_id].update(
+            {
+                "status": "completed" if result.get("success") else "failed",
+                "success": result.get("success", False),
+                "message": result.get("reason", "Task completed"),
+                "steps": formatted_steps,
+                "output": result.get("output"),
+                "completed_at": datetime.now().isoformat(),
+            }
+        )
+
+        logger.info(f"[{task_id}] Task completed with {len(formatted_steps)} formatted steps")
+
+    except Exception as e:
+        logger.error(f"[{task_id}] Task failed: {e}")
+        task_storage[task_id].update(
+            {
+                "status": "failed",
+                "success": False,
+                "error": str(e),
+                "completed_at": datetime.now().isoformat(),
+            }
+        )
 
 
 # ============ Request Models ============
@@ -242,38 +312,58 @@ async def list_tabs():
 # ============ Testing Endpoint ============
 
 
-@router.post("/test/mock-task")
-async def create_mock_task():
+@router.post("/test/check-android-version")
+async def check_android_version(background_tasks: BackgroundTasks):
     """
-    Create a mock task for testing the frontend step display.
-    Simulates a successful tab operation with sample steps.
+    Check Android version by navigating to Settings.
+
+    This demonstrates:
+    - Real agent execution with actual device interaction
+    - Background task processing
+    - Live step tracking via /status endpoint
+    - End-to-end polling from frontend
+
+    The agent will:
+    1. Open Settings app
+    2. Search for "Android version"
+    3. Find and report the version number
     """
     import uuid
 
     task_id = str(uuid.uuid4())[:8]
 
-    # Store mock task with sample steps
+    # Initialize task in storage with "running" status
     task_storage[task_id] = {
-        "status": "completed",
-        "success": True,
-        "message": "Mock tab operation completed successfully",
-        "steps": [
-            {"step": 1, "description": "Opening Chrome app"},
-            {"step": 2, "description": "Tapping tab switcher icon"},
-            {"step": 3, "description": "Scrolling through tab list"},
-            {"step": 4, "description": "Identifying 6 open tabs"},
-            {"step": 5, "description": "Grouping work-related tabs"},
-            {"step": 6, "description": "Grouping social media tabs"},
-            {"step": 7, "description": "Taking final screenshot"},
-        ],
+        "status": "running",
+        "success": None,
+        "message": "Checking Android version...",
+        "steps": [],
         "started_at": datetime.now().isoformat(),
-        "completed_at": datetime.now().isoformat(),
     }
+
+    # Define the agent goal
+    goal = """
+    Go to Settings and find the Android version.
+    
+    Steps:
+    1. Open the Settings app
+    2. Scroll down to find "About phone" or "About device"
+    3. Tap on it
+    4. Look for "Android version" 
+    5. Read and report the version number
+    
+    Important: Once you see the Android version on screen, STOP and report it.
+    """
+
+    # Run agent task in background
+    background_tasks.add_task(run_agent_task_background, task_id, goal)
+
+    logger.info(f"Started Android version check task: {task_id}")
 
     return TabOperationResponse(
         task_id=task_id,
         status="started",
-        message="Mock task created - poll /status/{task_id} to see results",
+        message="Checking Android version... Poll /status/{task_id} for updates",
     )
 
 

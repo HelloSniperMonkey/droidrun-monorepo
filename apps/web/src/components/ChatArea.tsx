@@ -97,6 +97,16 @@ export const ChatArea = ({
   }, []);
 
   const apiActions: EndpointAction[] = [
+    { 
+      id: "check-android-version", 
+      label: "Check Android version", 
+      category: "misc", 
+      onRun: async () => {
+        // Use polling wrapper for real-time step updates from actual device
+        handleTaskWithPolling("Check Android Version", api.checkAndroidVersion);
+        return {}; // Return empty object to satisfy EndpointActions
+      }
+    },
     { id: "tabs-list", label: "List tabs", category: "browser-tabs", onRun: () => api.tabsList() },
     { id: "tabs-organize", label: "Organize tabs", category: "browser-tabs", onRun: () => api.tabsOrganize() },
     { id: "tabs-close", label: "Close old tabs", category: "browser-tabs", onRun: () => api.tabsCloseOld(7) },
@@ -109,7 +119,12 @@ export const ChatArea = ({
     { id: "daily-login-duolingo", label: "Daily login (Duolingo)", category: "misc", onRun: () => api.dailyLogin("Duolingo") },
   ];
 
-  const handleActionResult = (label: string, result: any) => {
+  const handleActionResult = (label: string, result: any, mode: "replace" | "add" = "replace") => {
+    // Skip if result is empty (handled by polling wrapper)
+    if (!result || Object.keys(result).length === 0) {
+      return;
+    }
+    
     // Extract steps if present
     const steps = result?.steps || [];
     
@@ -117,7 +132,7 @@ export const ChatArea = ({
     let content: string;
     if (steps.length > 0) {
       // Show just the high-level status, steps will be displayed separately
-      const status = result?.success ? "✓ Success" : "✗ Failed";
+      const status = result?.success ? "Success" : "Failed";
       const message = result?.message || result?.error || "";
       content = `${label}: ${status}${message ? ` - ${message}` : ""}`;
     } else {
@@ -125,11 +140,77 @@ export const ChatArea = ({
       content = `${label}:\n${JSON.stringify(result, null, 2)}`;
     }
     
-    addMessage({ 
-      role: "assistant", 
+    const message = { 
+      role: "assistant" as const, 
       content,
       steps: steps.length > 0 ? steps : undefined,
+    };
+
+    if (mode === "replace") {
+      replaceLastAssistantMessage(content, steps.length > 0 ? steps : undefined);
+    } else {
+      addMessage(message);
+    }
+  };
+
+  const handleActionStart = (action: { label: string }) => {
+    addMessage({
+      role: "user",
+      content: action.label,
     });
+    setAssistantPlaceholder();
+  };
+
+  // Polling wrapper for async tasks
+  const handleTaskWithPolling = async (label: string, startTask: () => Promise<any>) => {
+    try {
+      // Start the task
+      const initialResult = await startTask();
+      const taskId = initialResult?.task_id;
+
+      if (!taskId) {
+        // No task ID, treat as immediate result
+        handleActionResult(label, initialResult);
+        return;
+      }
+
+      // Show "Running..." message
+      replaceLastAssistantMessage(`${label}: Running... (Task ID: ${taskId})`);
+
+      // Poll for completion
+      let attempts = 0;
+      const maxAttempts = 60; // 2 minutes max (60 * 2 seconds)
+      
+      const poll = async () => {
+        attempts++;
+        
+        try {
+          const status = await api.tabsStatus(taskId);
+          
+          if (status.status === "completed" || status.status === "failed") {
+            // Task finished, show final result
+            handleActionResult(label, status);
+            return;
+          }
+          
+          if (attempts >= maxAttempts) {
+            replaceLastAssistantMessage(`${label}: Timeout - task is taking too long. Task ID: ${taskId}`);
+            return;
+          }
+          
+          // Continue polling
+          setTimeout(poll, 2000);
+        } catch (error) {
+          replaceLastAssistantMessage(`${label}: Error polling status - ${error}`);
+        }
+      };
+
+      // Start polling after 2 seconds
+      setTimeout(poll, 2000);
+
+    } catch (error) {
+      replaceLastAssistantMessage(`${label}: Error - ${error}`);
+    }
   };
 
   return (
@@ -157,7 +238,12 @@ export const ChatArea = ({
             <div className="w-full">
               <CategoryPills activeCategory={activeCategory} onSelect={(cat) => setActiveCategory(activeCategory === cat ? null : cat)} />
               <div className="mt-6">
-                <EndpointActions actions={apiActions} activeCategory={activeCategory} onResult={handleActionResult} />
+                <EndpointActions 
+                  actions={apiActions} 
+                  activeCategory={activeCategory} 
+                  onResult={handleActionResult}
+                  onStart={handleActionStart}
+                />
               </div>
             </div>
           </div>

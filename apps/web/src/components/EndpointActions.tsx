@@ -10,10 +10,12 @@ interface EndpointActionsProps {
   actions: EndpointAction[];
   activeCategory: string | null;
   onResult: (label: string, result: any) => void;
+  onStart?: (action: EndpointAction) => void;
 }
 
-export const EndpointActions = ({ actions, activeCategory, onResult }: EndpointActionsProps) => {
+export const EndpointActions = ({ actions, activeCategory, onResult, onStart }: EndpointActionsProps) => {
   const handleRun = async (action: EndpointAction) => {
+    onStart?.(action);
     try {
       const result = await action.onRun();
       onResult(action.label, result);

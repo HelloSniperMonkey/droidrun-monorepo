@@ -229,11 +229,44 @@ class IronClawAgent:
             await self._check_package_safety()
 
             logger.info(f"✅ Agent completed: success={result.success}")
+            logger.info(f"🔍 DEBUG: result.steps = {getattr(result, 'steps', 'NO STEPS ATTR')}")
+            logger.info(f"🔍 DEBUG: result.steps type = {type(getattr(result, 'steps', None))}")
 
             # Extract steps from shared state if available
             steps = []
             if self._agent and hasattr(self._agent, "shared_state"):
-                steps = self._agent.shared_state.summary_history
+                logger.info(
+                    f"🔍 DEBUG: shared_state exists: {self._agent.shared_state is not None}"
+                )
+                logger.info(
+                    f"🔍 DEBUG: summary_history type: {type(self._agent.shared_state.summary_history)}"
+                )
+                logger.info(
+                    f"🔍 DEBUG: summary_history length: {len(self._agent.shared_state.summary_history)}"
+                )
+                logger.info(
+                    f"🔍 DEBUG: summary_history content: {self._agent.shared_state.summary_history}"
+                )
+                logger.info(
+                    f"🔍 DEBUG: action_history length: {len(self._agent.shared_state.action_history)}"
+                )
+                logger.info(
+                    f"🔍 DEBUG: action_history sample: {self._agent.shared_state.action_history[:2] if len(self._agent.shared_state.action_history) > 0 else 'EMPTY'}"
+                )
+
+                # Try to extract from summary_history first, fall back to action_history
+                if self._agent.shared_state.summary_history:
+                    steps = self._agent.shared_state.summary_history
+                elif self._agent.shared_state.action_history:
+                    # Format action_history into readable steps
+                    steps = [
+                        f"Step {i + 1}: {action.get('description', action.get('action', str(action)[:50]))}"
+                        for i, action in enumerate(self._agent.shared_state.action_history)
+                    ]
+                else:
+                    steps = []
+            else:
+                logger.warning(f"🔍 DEBUG: No shared_state found")
 
             # Check if this was a schedule extraction task and perform it if agent thinks it's done
             if result.success and (
