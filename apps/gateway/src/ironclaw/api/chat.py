@@ -44,6 +44,54 @@ class ChatResponse(BaseModel):
     success: bool
 
 
+def _normalize_steps(raw_steps: Optional[list]) -> Optional[list[StepInfo]]:
+    """
+    Convert raw steps (strings or dicts) to list of StepInfo objects.
+    The agent may return:
+    - Strings like "Step 1: Opened Chrome"
+    - Dicts like {"action": "click", "description": "..."}
+    - Or other formats
+
+    We normalize all of these to StepInfo.
+    """
+    if not raw_steps:
+        return None
+
+    normalized = []
+    total = len(raw_steps)
+
+    for i, step in enumerate(raw_steps):
+        step_num = i + 1
+
+        if isinstance(step, StepInfo):
+            # Already a StepInfo object
+            normalized.append(step)
+        elif isinstance(step, dict):
+            # Dict format from agent
+            normalized.append(
+                StepInfo(
+                    step_number=step.get("step_number", step_num),
+                    total_steps=step.get("total_steps", total),
+                    description=step.get("description") or step.get("action") or str(step),
+                    action=step.get("action"),
+                )
+            )
+        elif isinstance(step, str):
+            # String format - parse "Step N: description" if present
+            normalized.append(
+                StepInfo(step_number=step_num, total_steps=total, description=step, action=None)
+            )
+        else:
+            # Unknown format, convert to string
+            normalized.append(
+                StepInfo(
+                    step_number=step_num, total_steps=total, description=str(step), action=None
+                )
+            )
+
+    return normalized if normalized else None
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_handler(request: ChatRequest):
     """
@@ -100,7 +148,9 @@ async def chat_handler(request: ChatRequest):
             if result["success"]
             else f"Failed: {result.get('error')}",
             success=result["success"],
-            steps=[result.get("method", "unknown")],
+            steps=_normalize_steps([result.get("method", "Personalization completed")])
+            if result.get("method")
+            else None,
         )
 
     # Basic intent check (could be improved with an LLM router)
@@ -123,6 +173,34 @@ async def chat_handler(request: ChatRequest):
         return await _handle_close_old_tabs(request.message)
     elif "list" in message_lower and "tab" in message_lower:
         return await _handle_list_tabs()
+
+    # Check for job hunting commands
+    # If user mentions job-related keywords, route to Job Hunter service
+    job_keywords = [
+        "job",
+        "apply",
+        "resume",
+        "career",
+        "employment",
+        "hire",
+        "position",
+        "find me a",
+    ]
+    is_job_intent = any(kw in message_lower for kw in job_keywords)
+
+    if is_job_intent:
+        # Check if there's a recently uploaded PDF (resume)
+        uploaded_pdf = None
+        if image_path and str(image_path).endswith(".pdf"):
+            uploaded_pdf = image_path
+        else:
+            # Check for any PDF in uploads
+            pdfs = list(UPLOAD_DIR.glob("*.pdf"))
+            if pdfs:
+                # Get most recent PDF
+                uploaded_pdf = max(pdfs, key=lambda f: f.stat().st_mtime)
+
+        return await _handle_job_hunting(request.message, uploaded_pdf)
 
     try:
         # Create the agent
@@ -150,7 +228,9 @@ async def chat_handler(request: ChatRequest):
             )
 
         return ChatResponse(
-            response=response_text, steps=result.get("steps"), success=result["success"]
+            response=response_text,
+            steps=_normalize_steps(result.get("steps")),
+            success=result["success"],
         )
 
     except Exception as e:
@@ -426,5 +506,98 @@ async def _handle_list_tabs() -> ChatResponse:
         logger.error(f"List tabs failed: {e}")
         return ChatResponse(
             response="Failed to list tabs. Make sure Chrome is running on your device.",
+            success=False,
+        )
+
+
+async def _handle_job_hunting(message: str, resume_path: Optional[Path] = None) -> ChatResponse:
+    """
+    Handle job hunting commands by forwarding to the Job Hunter Flask service.
+
+    This proxies the request to localhost:5123 (Job Hunter service) which handles:
+    - Resume parsing
+    - Job searching via MobileRun/DroidRun
+    - Application tracking
+    """
+    JOB_HUNTER_BASE = "http://localhost:5123"
+
+    # First, check if we even have a resume
+    if not resume_path or not resume_path.exists():
+        # No resume, just return instructions
+        return ChatResponse(
+            response="To start job hunting, please upload your resume (PDF) first. I'll then search for relevant jobs and apply automatically.\n\nTip: Upload your resume and say 'find me a job' to get started!",
+            success=True,
+            steps=_normalize_steps(
+                [
+                    "Upload your resume (PDF)",
+                    "Tell me to 'find me a job'",
+                    "Check the Job Hunter dashboard for progress",
+                ]
+            ),
+        )
+
+    # Import httpx here to catch import errors
+    try:
+        import httpx
+    except ImportError as e:
+        logger.error(f"httpx not installed: {e}")
+        return ChatResponse(
+            response="Server configuration error: httpx library not installed.",
+            success=False,
+        )
+
+    logger.info(f"Starting job hunt with resume: {resume_path}")
+
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            # Upload resume to Job Hunter Flask service
+            with open(resume_path, "rb") as f:
+                files = {"resume": (resume_path.name, f, "application/pdf")}
+                data = {"user_id": "default_user"}
+
+                response = await client.post(
+                    f"{JOB_HUNTER_BASE}/api/upload-resume", files=files, data=data
+                )
+
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    steps = [
+                        "Resume uploaded and parsed",
+                        "Job search initiated",
+                        "Check the Job Hunter dashboard for progress",
+                    ]
+                    return ChatResponse(
+                        response=f"Job hunting started! {result.get('message', 'Your resume has been processed and job applications are being submitted.')} Check the [Job Hunter google sheet](https://docs.google.com/spreadsheets/d/1FupoVr33rLLIOtRrlYxFjXvlMqules-_49pVJcrdgx4/edit) for progress.",
+                        steps=_normalize_steps(steps),
+                        success=True,
+                    )
+                else:
+                    return ChatResponse(
+                        response=f"Job hunting failed: {result.get('error', 'Unknown error')}",
+                        success=False,
+                    )
+            else:
+                return ChatResponse(
+                    response=f"Failed to connect to Job Hunter service: HTTP {response.status_code}",
+                    success=False,
+                )
+
+    except Exception as e:
+        # Catch all connection-related errors
+        error_type = type(e).__name__
+        error_msg = str(e) if str(e) else error_type
+
+        # Check if it's a connection error
+        if "Connect" in error_type or "connect" in error_msg.lower():
+            logger.error(f"Job Hunter service not running: {error_type}")
+            return ChatResponse(
+                response="Job Hunter service is not running. Please start the Job Hunter service:\n\n```\ncd apps/job-hunter && uv run job-hunter web\n```\n\nThen try again.",
+                success=False,
+            )
+
+        logger.error(f"Job hunting failed ({error_type}): {error_msg}")
+        return ChatResponse(
+            response=f"Job hunting failed: {error_msg}",
             success=False,
         )

@@ -851,6 +851,19 @@ wheels = [
 ]
 
 [[package]]
+name = "flask-cors"
+version = "6.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flask" },
+    { name = "werkzeug" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/74/0fc0fa68d62f21daef41017dafab19ef4b36551521260987eb3a5394c7ba/flask_cors-6.0.2.tar.gz", hash = "sha256:6e118f3698249ae33e429760db98ce032a8bf9913638d085ca0f4c5534ad2423", size = 13472, upload-time = "2025-12-12T20:31:42.861Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4f/af/72ad54402e599152de6d067324c46fe6a4f531c7c65baf7e96c63db55eaf/flask_cors-6.0.2-py3-none-any.whl", hash = "sha256:e57544d415dfd7da89a9564e1e3a9e515042df76e12130641ca6f3f2f03b699a", size = 13257, upload-time = "2025-12-12T20:31:41.3Z" },
+]
+
+[[package]]
 name = "flatbuffers"
 version = "25.12.19"
 source = { registry = "https://pypi.org/simple" }
@@ -1486,6 +1499,7 @@ source = { editable = "apps/job-hunter" }
 dependencies = [
     { name = "anthropic" },
     { name = "flask" },
+    { name = "flask-cors" },
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "google-auth-httplib2" },
@@ -1503,6 +1517,7 @@ dependencies = [
 requires-dist = [
     { name = "anthropic", specifier = ">=0.76.0" },
     { name = "flask", specifier = ">=3.1.2" },
+    { name = "flask-cors", specifier = ">=5.0.0" },
     { name = "google-api-python-client", specifier = ">=2.188.0" },
     { name = "google-auth", specifier = ">=2.47.0" },
     { name = "google-auth-httplib2", specifier = ">=0.3.0" },
@@ -1532,6 +1547,7 @@ dependencies = [
     { name = "google-auth-httplib2" },
     { name = "google-auth-oauthlib" },
     { name = "google-generativeai" },
+    { name = "grpcio" },
     { name = "httpx" },
     { name = "llama-index-llms-google-genai" },
     { name = "pydantic" },
@@ -1569,6 +1585,7 @@ requires-dist = [
     { name = "google-auth-httplib2", specifier = ">=0.2.0" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.0" },
     { name = "google-generativeai", specifier = ">=0.8.6" },
+    { name = "grpcio", specifier = ">=1.76.0" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "llama-index-llms-google-genai", specifier = ">=0.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
