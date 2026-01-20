@@ -42,6 +42,7 @@ class TabExecutionResult:
     screenshots: List[str] = field(default_factory=list)
     task_id: Optional[str] = None
     error: Optional[str] = None
+    steps: List[dict] = field(default_factory=list)  # Parsed step information
 
 
 class TabExecutionService:
@@ -98,16 +99,36 @@ class TabExecutionService:
             raise
 
     async def _execute_via_droidrun(self, goal: str) -> dict:
-        """Fallback: Execute via local Droidrun agent."""
+        """Fallback: Execute via local Droidrun agent and extract steps."""
         try:
             from ..agents.ironclaw_agent import create_ironclaw_agent
 
             agent = await create_ironclaw_agent(goal=goal)
             result = await agent.run()
+
+            # Extract steps directly from agent result (most reliable)
+            steps = result.get("steps", [])
+
+            # Convert steps to dict format if they're not already
+            if steps and isinstance(steps, list):
+                if isinstance(steps[0], str):
+                    # Simple string list - convert to dict format
+                    steps_dict = [
+                        {"step": i + 1, "description": step} for i, step in enumerate(steps)
+                    ]
+                else:
+                    # Already in dict format or complex objects
+                    steps_dict = steps
+            else:
+                steps_dict = []
+
+            logger.info(f"Extracted {len(steps_dict)} steps from agent result")
+
             return {
                 "success": result.get("success", False),
                 "output": result.get("output"),
                 "error": result.get("error"),
+                "steps": steps_dict,
             }
         except Exception as e:
             logger.error(f"Droidrun execution failed: {e}")
@@ -179,17 +200,21 @@ class TabExecutionService:
         try:
             result = await self._execute_hybrid(task, max_steps=60)
 
+            steps = result.get("steps", [])
+
             if result.get("success", False) or result.get("id"):
                 return TabExecutionResult(
                     success=True,
                     message="Tabs organized successfully",
                     task_id=result.get("id"),
+                    steps=steps,
                 )
             else:
                 return TabExecutionResult(
                     success=False,
                     message="Tab organization failed",
                     error=result.get("error", "Unknown error"),
+                    steps=steps,
                 )
         except Exception as e:
             return TabExecutionResult(
@@ -225,17 +250,21 @@ class TabExecutionService:
         try:
             result = await self._execute_hybrid(task, max_steps=40)
 
+            steps = result.get("steps", [])
+
             if result.get("success", False) or result.get("id"):
                 return TabExecutionResult(
                     success=True,
                     message="Duplicate tabs merged",
                     task_id=result.get("id"),
+                    steps=steps,
                 )
             else:
                 return TabExecutionResult(
                     success=False,
                     message="Duplicate merge failed",
                     error=result.get("error", "Unknown error"),
+                    steps=steps,
                 )
         except Exception as e:
             return TabExecutionResult(
@@ -272,17 +301,21 @@ class TabExecutionService:
         try:
             result = await self._execute_hybrid(task, max_steps=40)
 
+            steps = result.get("steps", [])
+
             if result.get("success", False) or result.get("id"):
                 return TabExecutionResult(
                     success=True,
                     message=f"Closed up to {max_tabs} old tabs",
                     task_id=result.get("id"),
+                    steps=steps,
                 )
             else:
                 return TabExecutionResult(
                     success=False,
                     message="Tab cleanup failed",
                     error=result.get("error", "Unknown error"),
+                    steps=steps,
                 )
         except Exception as e:
             return TabExecutionResult(
@@ -315,17 +348,22 @@ class TabExecutionService:
         try:
             result = await self._execute_hybrid(task, max_steps=20)
 
+            # Extract steps from result
+            steps = result.get("steps", [])
+
             if result.get("success", False) or result.get("id"):
                 return TabExecutionResult(
                     success=True,
                     message="Tab list retrieved",
                     task_id=result.get("id"),
+                    steps=steps,
                 )
             else:
                 return TabExecutionResult(
                     success=False,
                     message="Failed to list tabs",
                     error=result.get("error", "Unknown error"),
+                    steps=steps,
                 )
         except Exception as e:
             return TabExecutionResult(

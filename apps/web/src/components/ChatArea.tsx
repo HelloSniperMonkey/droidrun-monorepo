@@ -4,13 +4,13 @@ import { CategoryPills } from "./CategoryPills";
 import { EndpointActions, type EndpointAction } from "./EndpointActions";
 import { api } from "@/lib/api";
 import { useAttachments } from "@/hooks/useAttachments";
-import type { ChatAttachment, ChatMessage, ChatThread } from "@/types/chat";
+import type { ChatAttachment, ChatMessage, ChatThread, StepInfo } from "@/types/chat";
 
 interface ChatAreaProps {
   activeThread?: ChatThread;
   addMessage: (message: Omit<ChatMessage, "id" | "createdAt">) => void;
   setAssistantPlaceholder: () => void;
-  replaceLastAssistantMessage: (content: string) => void;
+  replaceLastAssistantMessage: (content: string, steps?: StepInfo[]) => void;
 }
 
 export const ChatArea = ({
@@ -49,7 +49,7 @@ export const ChatArea = ({
     try {
       const uploadedFilename = attached[0]?.uploadedFilename;
       const res = await api.chat(userMessage.content, uploadedFilename);
-      replaceLastAssistantMessage(res.response || "Done.");
+      replaceLastAssistantMessage(res.response || "Done.", res.steps);
     } catch (err: any) {
       replaceLastAssistantMessage(err?.message || "Failed to get response");
     } finally {
@@ -105,20 +105,35 @@ export const ChatArea = ({
     { id: "jobs-portals", label: "Job portals", category: "jobs", onRun: () => api.jobPortals() },
     { id: "applications-sheets", label: "Google Sheets apps", category: "jobs", onRun: () => api.applicationsSheets() },
     { id: "health", label: "Gateway health", category: "misc", onRun: () => api.health() },
-    { id: "root", label: "Gateway root", category: "misc", onRun: () => api.gatewayRoot() },
     { id: "wallpaper-search", label: "Search wallpaper", category: "misc", onRun: () => api.searchWallpaper() },
-    { id: "wake-location", label: "Wake location", category: "misc", onRun: () => api.wakeLocation() },
-    { id: "alarm-time", label: "Alarm time", category: "misc", onRun: () => api.alarmTime() },
     { id: "daily-login-duolingo", label: "Daily login (Duolingo)", category: "misc", onRun: () => api.dailyLogin("Duolingo") },
   ];
 
   const handleActionResult = (label: string, result: any) => {
-    const content = `${label}:\n${JSON.stringify(result, null, 2)}`;
-    addMessage({ role: "assistant", content });
+    // Extract steps if present
+    const steps = result?.steps || [];
+    
+    // If we have steps, show a cleaner message
+    let content: string;
+    if (steps.length > 0) {
+      // Show just the high-level status, steps will be displayed separately
+      const status = result?.success ? "✓ Success" : "✗ Failed";
+      const message = result?.message || result?.error || "";
+      content = `${label}: ${status}${message ? ` - ${message}` : ""}`;
+    } else {
+      // No steps, show full JSON (legacy behavior)
+      content = `${label}:\n${JSON.stringify(result, null, 2)}`;
+    }
+    
+    addMessage({ 
+      role: "assistant", 
+      content,
+      steps: steps.length > 0 ? steps : undefined,
+    });
   };
 
   return (
-    <div 
+    <div
       className="flex-1 flex flex-col h-screen bg-chat overflow-hidden relative"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -134,7 +149,7 @@ export const ChatArea = ({
           </div>
         </div>
       )}
-      
+
       <div className="flex-1 overflow-y-auto">
         {isEmptyState ? (
           <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 space-y-6 text-center">
@@ -151,11 +166,10 @@ export const ChatArea = ({
             {conversation.map((message) => (
               <div key={message.id} className={`fade-in ${message.role === "user" ? "text-right" : "text-left"}`}>
                 <div
-                  className={`inline-block max-w-[85%] px-4 py-3 rounded-2xl ${
-                    message.role === "user"
+                  className={`inline-block max-w-[85%] px-4 py-3 rounded-2xl ${message.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-secondary-foreground"
-                  }`}
+                    }`}
                 >
                   <div className="space-y-2">
                     {message.attachments?.length ? (
@@ -183,6 +197,17 @@ export const ChatArea = ({
                       </div>
                     ) : null}
                     <div>{message.content}</div>
+                    {message.role === "assistant" && message.steps && message.steps.length > 0 && (
+                      <div className="mt-3 space-y-1 border-l-2 border-primary/30 pl-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Steps</p>
+                        {message.steps.map((step, i) => (
+                          <div key={i} className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground/80">Step {step.step_number}/{step.total_steps}:</span>{" "}
+                            {step.description}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

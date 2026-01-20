@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Pin } from "lucide-react";
+import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 import type { ChatThread } from "@/types/chat";
 
 interface SidebarProps {
@@ -11,9 +12,12 @@ interface SidebarProps {
   activeId: string;
   onSelect: (id: string) => void;
   onNew: () => void;
+  onDelete: (id: string) => void;
+  mode: "local" | "cloud";
+  onModeChange: (mode: "local" | "cloud") => void;
 }
 
-export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew }: SidebarProps) => {
+export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, onDelete, mode, onModeChange }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -51,9 +55,20 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew }
       </div>
 
       <div className="px-3 mb-3">
-        <Button onClick={onNew} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
-          <Plus className="h-4 w-4 mr-2" />
-          New Chat
+        <ModeToggle mode={mode} onChange={onModeChange} />
+      </div>
+
+      <div className="px-3 mb-3">
+        <Button onClick={onNew} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium justify-between">
+          <div className="flex items-center">
+            <Plus className="h-4 w-4 mr-2" />
+            New Chat
+          </div>
+          <div className="flex items-center gap-1 text-xs opacity-60 font-normal">
+            <span className="text-[10px]">⇧</span>
+            <span className="text-[10px]">⌘</span>
+            <span>O</span>
+          </div>
         </Button>
       </div>
 
@@ -74,10 +89,10 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew }
           <p className="text-xs text-muted-foreground text-center py-8">No conversations yet</p>
         ) : (
           filtered.map((thread) => (
-            <button
+            <div
               key={thread.id}
               onClick={() => onSelect(thread.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group ${
                 thread.id === activeId
                   ? "bg-accent text-accent-foreground border border-border/60"
                   : "hover:bg-accent/70 text-foreground/80"
@@ -89,8 +104,21 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew }
                   {new Date(thread.updatedAt).toLocaleString()}
                 </p>
               </div>
-              {thread.id === activeId && <Pin className="h-3.5 w-3.5 text-muted-foreground" />}
-            </button>
+              {thread.id === activeId && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Are you sure you want to delete this chat?")) {
+                      onDelete(thread.id);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                  title="Delete chat"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           ))
         )}
       </div>

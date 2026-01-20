@@ -10,12 +10,20 @@ export interface ChatAttachment {
   uploading?: boolean;
 }
 
+export interface StepInfo {
+  step_number: number;
+  total_steps: number;
+  description: string;
+  action?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   createdAt: number;
   attachments?: ChatAttachment[];
+  steps?: StepInfo[];
 }
 
 export interface ChatThread {
@@ -25,3 +33,4 @@ export interface ChatThread {
   updatedAt: number;
   draftAttachments?: ChatAttachment[];
 }
+

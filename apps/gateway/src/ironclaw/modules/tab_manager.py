@@ -92,7 +92,7 @@ class TabManagerService:
         """
         Organize Chrome tabs into groups by content type using AI analysis.
 
-        Returns dict with organization results.
+        Returns dict with organization results and execution steps.
         """
         if not task_id:
             task_id = str(uuid.uuid4())[:8]
@@ -122,6 +122,7 @@ class TabManagerService:
                 "mobilerun_task_id": result.task_id,
                 "groups_created": result.groups_created,
             }
+            _task_storage[task_id]["steps"] = result.steps
 
             self._log_task(task_id, f"Organization completed: {result.message}")
 
@@ -130,6 +131,7 @@ class TabManagerService:
                 "task_id": task_id,
                 "message": result.message,
                 "error": result.error,
+                "steps": result.steps,  # Include parsed step information
             }
 
         except Exception as e:
@@ -142,7 +144,7 @@ class TabManagerService:
         """
         List all currently open Chrome tabs.
 
-        Returns dict with tab information.
+        Returns dict with tab information and execution steps.
         """
         try:
             result = await self.execution_service.list_tabs()
@@ -153,6 +155,8 @@ class TabManagerService:
                 "count": len(result.tabs) if result.tabs else 0,
                 "task_id": result.task_id,
                 "error": result.error,
+                "steps": result.steps,  # Include parsed step information (sanitized)
+                # Note: raw_logs are NOT exposed via API for security
             }
 
         except Exception as e:
@@ -194,6 +198,7 @@ class TabManagerService:
                 "message": result.message,
                 "tabs_closed": result.tabs_closed,
             }
+            _task_storage[task_id]["steps"] = result.steps
 
             self._log_task(task_id, f"Cleanup completed: {result.message}")
 
@@ -203,6 +208,7 @@ class TabManagerService:
                 "message": result.message,
                 "tabs_closed": result.tabs_closed,
                 "error": result.error,
+                "steps": result.steps,  # Include parsed step information
             }
 
         except Exception as e:
@@ -241,6 +247,7 @@ class TabManagerService:
                 "message": result.message,
                 "duplicates_merged": result.duplicates_merged,
             }
+            _task_storage[task_id]["steps"] = result.steps
 
             self._log_task(task_id, f"Merge completed: {result.message}")
 
@@ -250,6 +257,7 @@ class TabManagerService:
                 "message": result.message,
                 "duplicates_merged": result.duplicates_merged,
                 "error": result.error,
+                "steps": result.steps,  # Include parsed step information
             }
 
         except Exception as e:

@@ -47,14 +47,14 @@ export function useLocalThreads() {
     }));
   };
 
-  const replaceLastAssistantMessage = (content: string) => {
+  const replaceLastAssistantMessage = (content: string, steps?: ChatMessage["steps"]) => {
     if (!activeThread) return;
     updateActiveThread((thread) => {
       const lastIndex = [...thread.messages].reverse().findIndex((m) => m.role === "assistant");
       if (lastIndex === -1) return thread;
       const realIndex = thread.messages.length - 1 - lastIndex;
       const updated = [...thread.messages];
-      updated[realIndex] = { ...updated[realIndex], content, createdAt: Date.now() };
+      updated[realIndex] = { ...updated[realIndex], content, steps, createdAt: Date.now() };
       return { ...thread, messages: updated, updatedAt: Date.now() };
     });
   };
@@ -98,6 +98,24 @@ export function useLocalThreads() {
     setActiveThreadId(newThread.id);
   };
 
+  const deleteThread = (id: string) => {
+    setThreads((prev) => {
+      const filtered = prev.filter((t) => t.id !== id);
+      // If we deleted the active thread, switch to the first available or create new
+      if (id === activeThreadId) {
+        if (filtered.length > 0) {
+          setActiveThreadId(filtered[0].id);
+        } else {
+          // If all threads are deleted, create a new empty one
+          const newThread = createEmptyThread();
+          setActiveThreadId(newThread.id);
+          return [newThread];
+        }
+      }
+      return filtered;
+    });
+  };
+
   const setActiveById = (id: string) => {
     setActiveThreadId(id);
   };
@@ -113,6 +131,7 @@ export function useLocalThreads() {
     addAttachmentToDraft,
     removeAttachmentFromDraft,
     startNewThread,
+    deleteThread,
     setThreads,
   };
 }

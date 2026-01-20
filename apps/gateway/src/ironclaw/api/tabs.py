@@ -4,7 +4,8 @@ Handles Chrome tab organization, cleanup, and session management.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
+from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
@@ -13,6 +14,10 @@ from ..modules.tab_manager import TabManagerService
 
 logger = logging.getLogger("ironclaw.api.tabs")
 router = APIRouter()
+
+# In-memory task storage for async execution
+# Format: {task_id: {status, steps, message, error, started_at, completed_at}}
+task_storage: Dict[str, Dict[str, Any]] = {}
 
 
 # ============ Request Models ============
@@ -69,6 +74,7 @@ class TabOperationResponse(BaseModel):
     task_id: str
     status: str
     message: str
+    steps: Optional[list] = None  # Parsed step information from execution
 
 
 class TabListResponse(BaseModel):
@@ -79,6 +85,7 @@ class TabListResponse(BaseModel):
     count: int = 0
     task_id: Optional[str] = None
     error: Optional[str] = None
+    steps: Optional[list] = None  # Parsed step information from execution
 
 
 class SessionResponse(BaseModel):
@@ -105,8 +112,8 @@ class SessionListResponse(BaseModel):
 
 @router.post("/organize", response_model=TabOperationResponse)
 async def organize_tabs(
-    request: TabOrganizationRequest,
     background_tasks: BackgroundTasks,
+    request: Optional[TabOrganizationRequest] = None,
 ):
     """
     Organize Chrome tabs into AI-determined groups.
@@ -118,7 +125,7 @@ async def organize_tabs(
     - Research
     - Entertainment
 
-    Runs asynchronously in the background.
+    Executes synchronously and returns steps when complete.
     """
     try:
         service = TabManagerService()
@@ -128,16 +135,18 @@ async def organize_tabs(
 
         task_id = str(uuid.uuid4())[:8]
 
-        # Queue the background task
-        background_tasks.add_task(service.organize_tabs, task_id=task_id)
+        # Execute synchronously to capture steps
+        logger.info(f"Starting synchronous tab organization: {task_id}")
+        result = await service.organize_tabs(task_id=task_id)
 
         return TabOperationResponse(
             task_id=task_id,
-            status="started",
-            message="Tab organization started - AI will group tabs by content type",
+            status="completed" if result.get("success") else "failed",
+            message=result.get("message", "Tab organization completed"),
+            steps=result.get("steps", []),
         )
     except Exception as e:
-        logger.error(f"Tab organization failed to start: {e}")
+        logger.error(f"Tab organization failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -151,6 +160,8 @@ async def close_old_tabs(
 
     Identifies and closes tabs that appear unused or stale.
     Conservative by default - won't close important-looking tabs.
+
+    Executes synchronously and returns steps when complete.
     """
     try:
         service = TabManagerService()
@@ -159,32 +170,36 @@ async def close_old_tabs(
 
         task_id = str(uuid.uuid4())[:8]
 
-        background_tasks.add_task(
-            service.close_old_tabs,
+        # Execute synchronously to capture steps
+        logger.info(f"Starting synchronous tab cleanup: {task_id}")
+        result = await service.close_old_tabs(
             days_old=request.days_old,
             task_id=task_id,
         )
 
         return TabOperationResponse(
             task_id=task_id,
-            status="started",
-            message=f"Tab cleanup started - closing tabs older than {request.days_old} days",
+            status="completed" if result.get("success") else "failed",
+            message=result.get("message", f"Tab cleanup completed"),
+            steps=result.get("steps", []),
         )
     except Exception as e:
-        logger.error(f"Tab cleanup failed to start: {e}")
+        logger.error(f"Tab cleanup failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/merge-duplicates", response_model=TabOperationResponse)
 async def merge_duplicate_tabs(
-    request: MergeDuplicatesRequest,
     background_tasks: BackgroundTasks,
+    request: Optional[MergeDuplicatesRequest] = None,
 ):
     """
     Find and close duplicate Chrome tabs.
 
     Identifies tabs with the same URL and closes duplicates,
     keeping one instance of each unique URL.
+
+    Executes synchronously and returns steps when complete.
     """
     try:
         service = TabManagerService()
@@ -193,18 +208,20 @@ async def merge_duplicate_tabs(
 
         task_id = str(uuid.uuid4())[:8]
 
-        background_tasks.add_task(
-            service.merge_duplicate_tabs,
+        # Execute synchronously to capture steps
+        logger.info(f"Starting synchronous duplicate merge: {task_id}")
+        result = await service.merge_duplicate_tabs(
             task_id=task_id,
         )
 
         return TabOperationResponse(
             task_id=task_id,
-            status="started",
-            message="Duplicate tab merge started - closing duplicate URLs",
+            status="completed" if result.get("success") else "failed",
+            message=result.get("message", "Duplicate tab merge completed"),
+            steps=result.get("steps", []),
         )
     except Exception as e:
-        logger.error(f"Duplicate merge failed to start: {e}")
+        logger.error(f"Duplicate merge failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -220,6 +237,44 @@ async def list_tabs():
     except Exception as e:
         logger.error(f"List tabs failed: {e}")
         return TabListResponse(success=False, error=str(e))
+
+
+# ============ Testing Endpoint ============
+
+
+@router.post("/test/mock-task")
+async def create_mock_task():
+    """
+    Create a mock task for testing the frontend step display.
+    Simulates a successful tab operation with sample steps.
+    """
+    import uuid
+
+    task_id = str(uuid.uuid4())[:8]
+
+    # Store mock task with sample steps
+    task_storage[task_id] = {
+        "status": "completed",
+        "success": True,
+        "message": "Mock tab operation completed successfully",
+        "steps": [
+            {"step": 1, "description": "Opening Chrome app"},
+            {"step": 2, "description": "Tapping tab switcher icon"},
+            {"step": 3, "description": "Scrolling through tab list"},
+            {"step": 4, "description": "Identifying 6 open tabs"},
+            {"step": 5, "description": "Grouping work-related tabs"},
+            {"step": 6, "description": "Grouping social media tabs"},
+            {"step": 7, "description": "Taking final screenshot"},
+        ],
+        "started_at": datetime.now().isoformat(),
+        "completed_at": datetime.now().isoformat(),
+    }
+
+    return TabOperationResponse(
+        task_id=task_id,
+        status="started",
+        message="Mock task created - poll /status/{task_id} to see results",
+    )
 
 
 # ============ Session Management Endpoints ============
@@ -321,8 +376,14 @@ async def get_task_status(task_id: str):
     """
     Get the status of a tab management task.
 
-    Returns the current status, logs, and result of a background task.
+    Returns the current status, steps, and result of a background task.
+    Checks both in-memory task_storage and TabManagerService.
     """
+    # First check in-memory storage (for new async tasks)
+    if task_id in task_storage:
+        return {"task_id": task_id, **task_storage[task_id]}
+
+    # Fallback to TabManagerService (for old implementation)
     service = TabManagerService()
     status = await service.get_task_status(task_id)
     if status is None:

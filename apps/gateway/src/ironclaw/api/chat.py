@@ -29,9 +29,18 @@ class ChatRequest(BaseModel):
     image_filename: Optional[str] = None
 
 
+class StepInfo(BaseModel):
+    """Structured step information from agent execution."""
+
+    step_number: int
+    total_steps: int
+    description: str
+    action: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
     response: str
-    steps: Optional[list] = None
+    steps: Optional[list[StepInfo]] = None
     success: bool
 
 

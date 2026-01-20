@@ -48,11 +48,15 @@ def create_app() -> FastAPI:
         debug=settings.debug,
     )
 
-    # CORS middleware
+    # CORS middleware - allow common dev ports
     origins = [
         "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:8000",
-        "http://localhost:8080",  # Vite dev server
+        "http://localhost:8080",
     ]
     if settings.debug:
         origins = ["*"]  # Allow all origins in debug mode
