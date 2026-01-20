@@ -3,6 +3,17 @@ import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Trash2 } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { ChatThread } from "@/types/chat";
 
 interface SidebarProps {
@@ -105,18 +116,38 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, 
                 </p>
               </div>
               {thread.id === activeId && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm("Are you sure you want to delete this chat?")) {
-                      onDelete(thread.id);
-                    }
-                  }}
-                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                  title="Delete chat"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                      title="Delete chat"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete chat?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete this conversation. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(thread.id);
+                        }}
+                        autoFocus
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           ))

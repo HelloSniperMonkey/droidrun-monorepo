@@ -113,7 +113,15 @@ export const ChatArea = ({
     { id: "tabs-merge", label: "Merge duplicates", category: "browser-tabs", onRun: () => api.tabsMergeDuplicates() },
     { id: "tabs-sessions", label: "List tab sessions", category: "browser-tabs", onRun: () => api.tabsSessions() },
     { id: "jobs-portals", label: "Job portals", category: "jobs", onRun: () => api.jobPortals() },
-    { id: "applications-sheets", label: "Google Sheets apps", category: "jobs", onRun: () => api.applicationsSheets() },
+    { 
+      id: "applications-sheets", 
+      label: "Google Sheets apps", 
+      category: "jobs", 
+      onRun: () => {
+        window.open("https://docs.google.com/spreadsheets/d/1FupoVr33rLLIOtRrlYxFjXvlMqules-_49pVJcrdgx4/edit", "_blank");
+        return Promise.resolve({ success: true, message: "Opened Google Sheets in new tab" });
+      }
+    },
     { id: "health", label: "Gateway health", category: "misc", onRun: () => api.health() },
     { id: "wallpaper-search", label: "Search wallpaper", category: "misc", onRun: () => api.searchWallpaper() },
     { id: "daily-login-duolingo", label: "Daily login (Duolingo)", category: "misc", onRun: () => api.dailyLogin("Duolingo") },
