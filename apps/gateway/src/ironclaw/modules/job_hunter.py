@@ -126,25 +126,24 @@ class JobHunterService:
                 # Bio-memory is loaded into the agent via the path
                 pass
 
-            # Build the agent goal
+            # Build the agent goal - Simplified for testing
             goal = f"""
-            Search for jobs matching: "{query}"
+            Find 5 Python Developer jobs and apply to them.
 
             Steps:
             1. Open Chrome browser
-            2. Go to Google and search for: {query} jobs
-            3. Look at the Google Jobs widget results
-            4. Find the first {max_applications} relevant job postings
-            5. For each job:
-               - Click to view details
-               - Look for "Apply" or "Easy Apply" button
-               - If there's an application form, fill it using the user context
-               - Take a screenshot after each step
+            2. Go to LinkedIn Jobs and search "Python Developer"
+            3. Apply to 2 jobs using Easy Apply
+            4. Go to Indeed.com and search "Python Developer"
+            5. Apply to 2 jobs
+            6. Go to Glassdoor and search "Python Developer"
+            7. Apply to 1 job
+            8. After each application, note the job title and company
 
-            Important:
-            - Only apply to jobs that match the query
-            - Use the resume from /sdcard/Download/ if file upload is needed
-            - Stop if you encounter a CAPTCHA (take screenshot and pause)
+            Target: Apply to 5 jobs total across these platforms.
+            Use resume from /sdcard/Download/ if file upload is needed.
+            Skip jobs requiring cover letters or extensive forms.
+            Report each successful application.
             """
 
             if filters and filters.get("posted_within"):

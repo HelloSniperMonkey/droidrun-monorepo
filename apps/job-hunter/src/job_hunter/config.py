@@ -20,7 +20,7 @@ class Config:
     # DroidRun Configuration (for local mode)
     ADB_DEVICE_SERIAL = os.getenv("ADB_DEVICE_SERIAL", "")  # e.g., "localhost:5555" or device serial
     DROIDRUN_LLM_PROVIDER = os.getenv("DROIDRUN_LLM_PROVIDER", "google")  # google, openai, anthropic
-    DROIDRUN_LLM_MODEL = os.getenv("DROIDRUN_LLM_MODEL", "gemini-2.5-flash")
+    DROIDRUN_LLM_MODEL = os.getenv("DROIDRUN_LLM_MODEL", "gemini-2.5-pro")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")  # Required for DroidRun with Google
 
     # MongoDB Configuration

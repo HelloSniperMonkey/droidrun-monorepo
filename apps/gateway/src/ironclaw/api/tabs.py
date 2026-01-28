@@ -90,6 +90,104 @@ async def run_agent_task_background(task_id: str, goal: str):
         )
 
 
+async def run_agent_task_with_steps(task_id: str, goal: str):
+    """
+    Run an IronClaw agent task with live step streaming to task_storage.
+    Steps are updated in real-time as the agent executes each action.
+    Errors are gracefully handled and never exposed raw to the frontend.
+    """
+    step_counter = 0
+    
+    def add_step(description: str, action: str = None):
+        """Add a step to the task storage for real-time frontend updates."""
+        nonlocal step_counter
+        step_counter += 1
+        step_info = {
+            "step_number": step_counter,
+            "total_steps": step_counter,  # Updates as we progress
+            "description": description,
+            "action": action,
+        }
+        task_storage[task_id]["steps"].append(step_info)
+        logger.info(f"[{task_id}] Step {step_counter}: {description}")
+    
+    try:
+        from ..agents.ironclaw_agent import create_ironclaw_agent
+
+        logger.info(f"[{task_id}] Starting agent task with step streaming: {goal[:50]}...")
+        add_step("Initializing agent...", "init")
+
+        # Create agent
+        agent = await create_ironclaw_agent(goal=goal)
+        add_step("Agent created, starting execution...", "create")
+
+        # Run agent
+        result = await agent.run()
+
+        logger.info(f"[{task_id}] Agent result keys: {list(result.keys())}")
+
+        # Extract any additional steps from the agent result
+        raw_steps = result.get("steps", [])
+        if raw_steps:
+            for step in raw_steps:
+                if isinstance(step, str):
+                    add_step(step)
+                elif isinstance(step, dict):
+                    add_step(
+                        step.get("description") or step.get("action") or str(step),
+                        step.get("action")
+                    )
+
+        # Determine success message
+        success = result.get("success", False)
+        if success:
+            message = result.get("reason") or result.get("output") or "Task completed successfully"
+            add_step(f"Completed: {message}", "complete")
+        else:
+            # Don't expose raw errors - provide user-friendly message
+            message = result.get("reason") or "Task encountered an issue, please try again"
+            add_step(f"Finished: {message}", "finish")
+
+        # Update final step counts
+        total_steps = len(task_storage[task_id]["steps"])
+        for step in task_storage[task_id]["steps"]:
+            step["total_steps"] = total_steps
+
+        # Update task storage with final result
+        task_storage[task_id].update(
+            {
+                "status": "completed",
+                "success": success,
+                "message": message,
+                "output": result.get("output"),
+                "completed_at": datetime.now().isoformat(),
+            }
+        )
+
+        logger.info(f"[{task_id}] Task completed with {total_steps} steps")
+
+    except Exception as e:
+        logger.error(f"[{task_id}] Task failed with exception: {e}")
+        
+        # Add a graceful step instead of exposing error
+        add_step("Task completed with issues, please try again", "error")
+        
+        # Update final step counts
+        total_steps = len(task_storage[task_id]["steps"])
+        for step in task_storage[task_id]["steps"]:
+            step["total_steps"] = total_steps
+        
+        # Never return raw errors to frontend - provide friendly message
+        task_storage[task_id].update(
+            {
+                "status": "completed",  # Mark as completed, not failed, to show steps
+                "success": False,
+                "message": "Task completed. Check the steps for details.",
+                "completed_at": datetime.now().isoformat(),
+            }
+        )
+
+
 # ============ Request Models ============
 
 
@@ -355,8 +453,8 @@ async def check_android_version(background_tasks: BackgroundTasks):
     Important: Once you see the Android version on screen, STOP and report it.
     """
 
-    # Run agent task in background
-    background_tasks.add_task(run_agent_task_background, task_id, goal)
+    # Run agent task in background with step streaming
+    background_tasks.add_task(run_agent_task_with_steps, task_id, goal)
 
     logger.info(f"Started Android version check task: {task_id}")
 

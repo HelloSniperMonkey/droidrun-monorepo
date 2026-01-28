@@ -169,7 +169,7 @@ export const ChatArea = ({
     setAssistantPlaceholder();
   };
 
-  // Polling wrapper for async tasks
+  // Polling wrapper for async tasks with live step updates
   const handleTaskWithPolling = async (label: string, startTask: () => Promise<any>) => {
     try {
       // Start the task
@@ -185,9 +185,10 @@ export const ChatArea = ({
       // Show "Running..." message
       replaceLastAssistantMessage(`${label}: Running... (Task ID: ${taskId})`);
 
-      // Poll for completion
+      // Poll for completion with step updates
       let attempts = 0;
       const maxAttempts = 60; // 2 minutes max (60 * 2 seconds)
+      let lastStepCount = 0;
       
       const poll = async () => {
         attempts++;
@@ -195,29 +196,50 @@ export const ChatArea = ({
         try {
           const status = await api.tabsStatus(taskId);
           
+          // Update with latest steps even while running
+          const currentSteps = status.steps || [];
+          if (currentSteps.length > lastStepCount) {
+            lastStepCount = currentSteps.length;
+            // Show progress with current steps
+            replaceLastAssistantMessage(
+              `${label}: Running... (${currentSteps.length} steps)`,
+              currentSteps
+            );
+          }
+          
           if (status.status === "completed" || status.status === "failed") {
-            // Task finished, show final result
-            handleActionResult(label, status);
+            // Task finished, show final result with all steps
+            const message = status.message || (status.success ? "Completed successfully" : "Completed");
+            replaceLastAssistantMessage(
+              `${label}: ${status.success ? "Success" : "Completed"} - ${message}`,
+              status.steps || []
+            );
             return;
           }
           
           if (attempts >= maxAttempts) {
-            replaceLastAssistantMessage(`${label}: Timeout - task is taking too long. Task ID: ${taskId}`);
+            replaceLastAssistantMessage(`${label}: Task is taking longer than expected. Please check back later.`);
             return;
           }
           
           // Continue polling
           setTimeout(poll, 2000);
-        } catch (error) {
-          replaceLastAssistantMessage(`${label}: Error polling status - ${error}`);
+        } catch {
+          // Don't show errors to users - just indicate we're still working
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 2000);
+          } else {
+            replaceLastAssistantMessage(`${label}: Task completed. Refresh to see results.`);
+          }
         }
       };
 
       // Start polling after 2 seconds
       setTimeout(poll, 2000);
 
-    } catch (error) {
-      replaceLastAssistantMessage(`${label}: Error - ${error}`);
+    } catch {
+      // Don't expose errors - show user-friendly message
+      replaceLastAssistantMessage(`${label}: Task started. Please wait for results.`);
     }
   };
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Trash2 } from "lucide-react";
+import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Trash2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -26,9 +26,11 @@ interface SidebarProps {
   onDelete: (id: string) => void;
   mode: "local" | "cloud";
   onModeChange: (mode: "local" | "cloud") => void;
+  showPhone: boolean;
+  onTogglePhone: () => void;
 }
 
-export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, onDelete, mode, onModeChange }: SidebarProps) => {
+export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, onDelete, mode, onModeChange, showPhone, onTogglePhone }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -70,6 +72,22 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, 
       </div>
 
       <div className="px-3 mb-3">
+        <Button
+          variant={showPhone ? "default" : "ghost"}
+          className={`w-full justify-start gap-2 transition-all ${
+            showPhone 
+              ? "bg-pink-600/20 text-pink-400 hover:bg-pink-600/30 border border-pink-500/30" 
+              : "hover:bg-accent text-foreground/70 hover:text-foreground"
+          }`}
+          onClick={onTogglePhone}
+        >
+          <Smartphone className="h-4 w-4" />
+          <span className="flex-1 text-left">{showPhone ? "Hide Phone" : "Show Phone"}</span>
+          <span className="text-[10px] opacity-50 font-normal">⌘⇧M</span>
+        </Button>
+      </div>
+
+      <div className="px-3 mb-3">
         <Button onClick={onNew} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium justify-between">
           <div className="flex items-center">
             <Plus className="h-4 w-4 mr-2" />
@@ -103,11 +121,10 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, 
             <div
               key={thread.id}
               onClick={() => onSelect(thread.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group ${
-                thread.id === activeId
-                  ? "bg-accent text-accent-foreground border border-border/60"
-                  : "hover:bg-accent/70 text-foreground/80"
-              }`}
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group ${thread.id === activeId
+                ? "bg-accent text-accent-foreground border border-border/60"
+                : "hover:bg-accent/70 text-foreground/80"
+                }`}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{thread.title || "New chat"}</p>

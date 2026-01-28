@@ -162,3 +162,18 @@ Frontend (localhost:3000)
 - For production, CORS origins should be configured via environment variables
 - Resume uploads are validated (PDF only, max 16MB)
 - No sensitive data exposed in API responses
+
+---
+
+## Repo Form Answers - Plan (January 20, 2026)
+
+### Todo
+- [x] Scan repo docs/README/specs for product summary language
+- [x] Extract concise one-line solution description from source materials
+- [x] Draft problem statement (<=100 words) based on repo context
+- [x] Draft solution explanation (<=200 words) grounded in repo details
+- [x] Confirm answers align with repo and share with user
+
+## Review
+- Sources: `README.md`, `apps/gateway/src/ironclaw/main.py`, `apps/gateway/src/ironclaw/modules/job_hunter.py`, `apps/gateway/src/ironclaw/modules/temporal_guardian.py`, `apps/gateway/src/ironclaw/modules/vapi_interrupter.py`, `apps/job-hunter/src/job_hunter/orchestrator.py`, `all_endpoints.md`
+- Outputs: Drafted one-line solution, problem statement, and solution explanation aligned to the repo’s gateway + mobile automation architecture.

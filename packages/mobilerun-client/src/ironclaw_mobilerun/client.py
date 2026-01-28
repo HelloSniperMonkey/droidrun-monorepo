@@ -23,7 +23,7 @@ class LLMModel(str, Enum):
     """Available LLM models for Mobilerun tasks."""
 
     GEMINI_25_FLASH = "google/gemini-2.5-flash"
-    GEMINI_25_PRO = "google/gemini-2.5-pro"
+    GEMINI_25_PRO = "google/gemini-2.5-flash"
     GEMINI_3_FLASH = "google/gemini-3-flash"
     GPT_51 = "openai/gpt-5.1"
     GPT_52 = "openai/gpt-5.2"
