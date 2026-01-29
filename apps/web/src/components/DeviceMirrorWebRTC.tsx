@@ -322,7 +322,7 @@ export const DeviceMirrorWebRTC = () => {
                         case 'connection_status':
                             setDeviceConnected(data.deviceConnected);
                             if (!data.deviceConnected) {
-                                setError('Waiting for device to connect...');
+                                setError(null); // Let the UI show translated "Waiting for Device" message
                             } else {
                                 // Auto-start if already connected
                                 startStream();
@@ -553,13 +553,17 @@ export const DeviceMirrorWebRTC = () => {
         return () => document.removeEventListener('fullscreenchange', h);
     }, []);
 
-    const connectionText = {
-        disconnected: 'Disconnected',
-        connecting: 'Connecting...',
-        signaling: 'Establishing WebRTC...',
-        connected: 'WebRTC H.264 Stream',
-        error: 'Connection Failed'
-    }[connectionState];
+    // Use conditional rendering for translatable connection text
+    const renderConnectionText = () => {
+        switch (connectionState) {
+            case 'disconnected': return <span>Disconnected</span>;
+            case 'connecting': return <span>Connecting...</span>;
+            case 'signaling': return <span>Establishing WebRTC...</span>;
+            case 'connected': return <span>WebRTC H.264 Stream</span>;
+            case 'error': return <span>Connection Failed</span>;
+            default: return null;
+        }
+    };
 
     return (
         <div ref={containerRef} className="flex flex-col h-full relative bg-[#0a0a0c] border-l border-white/5 overflow-hidden">
@@ -579,7 +583,7 @@ export const DeviceMirrorWebRTC = () => {
                             WebRTC Stream
                             {connectionState === 'connected' && <Zap className="h-3 w-3 text-emerald-400" />}
                         </h2>
-                        <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1">{connectionText}</p>
+                        <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1">{renderConnectionText()}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -653,12 +657,13 @@ export const DeviceMirrorWebRTC = () => {
                                         </div>
                                         <div className="space-y-2 mb-8">
                                             <h3 className="text-sm font-black text-white uppercase tracking-widest">
-                                                {connectionState === 'connecting' ? 'Connecting to Server' :
-                                                    connectionState === 'signaling' ? 'Establishing WebRTC' :
-                                                        !deviceConnected ? 'Waiting for Device' : 'Stream Offline'}
+                                                {connectionState === 'connecting' && <span>Connecting to Server</span>}
+                                                {connectionState === 'signaling' && <span>Establishing WebRTC</span>}
+                                                {connectionState !== 'connecting' && connectionState !== 'signaling' && !deviceConnected && <span>Waiting for Device</span>}
+                                                {connectionState !== 'connecting' && connectionState !== 'signaling' && deviceConnected && <span>Stream Offline</span>}
                                             </h3>
                                             <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter leading-relaxed">
-                                                {error || (!deviceConnected ? "Connect Portal app to ws://localhost:8082/device" : "Click below to start")}
+                                                {error || (!deviceConnected ? <span>Connect Portal app to ws://localhost:8082/device</span> : <span>Click below to start</span>)}
                                             </p>
                                         </div>
                                         <div className="space-y-2 w-full">
@@ -675,8 +680,9 @@ export const DeviceMirrorWebRTC = () => {
                                                 disabled={connectionState === 'connecting' || connectionState === 'signaling'}
                                                 className="w-full py-3 rounded-xl bg-white text-black text-[9px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
                                             >
-                                                {connectionState === 'connecting' ? "Connecting..." :
-                                                    connectionState === 'signaling' ? "Negotiating..." : "Reconnect"}
+                                                {connectionState === 'connecting' && <span>Connecting...</span>}
+                                                {connectionState === 'signaling' && <span>Negotiating...</span>}
+                                                {connectionState !== 'connecting' && connectionState !== 'signaling' && <span>Reconnect</span>}
                                             </button>
                                         </div>
                                     </div>

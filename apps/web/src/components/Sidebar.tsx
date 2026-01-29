@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { PanelLeftClose, PanelLeft, Search, Plus, Trash2, Smartphone, Box, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { ChatThread } from "@/types/chat";
+import { ReactNode } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,6 +32,46 @@ interface SidebarProps {
   showSnow: boolean;
   onToggleSnow: () => void;
 }
+
+// Helper components for translatable known thread titles
+const NewChatTitle = () => <span>New chat</span>;
+const ListTabsTitle = () => <span>List tabs</span>;
+const OrganizeTabsTitle = () => <span>Organize tabs</span>;
+const CloseOldTabsTitle = () => <span>Close old tabs</span>;
+const MergeDuplicatesTitle = () => <span>Merge duplicates</span>;
+const ListTabSessionsTitle = () => <span>List tab sessions</span>;
+const JobPortalsTitle = () => <span>Job portals</span>;
+const GoogleSheetsAppsTitle = () => <span>Google Sheets apps</span>;
+const GatewayHealthTitle = () => <span>Gateway health</span>;
+const CheckAndroidVersionTitle = () => <span>Check Android version</span>;
+
+// Map known English titles to their translatable components
+const knownTitles: Record<string, () => JSX.Element> = {
+  "New chat": NewChatTitle,
+  "List tabs": ListTabsTitle,
+  "Organize tabs": OrganizeTabsTitle,
+  "Close old tabs": CloseOldTabsTitle,
+  "Merge duplicates": MergeDuplicatesTitle,
+  "List tab sessions": ListTabSessionsTitle,
+  "Job portals": JobPortalsTitle,
+  "Google Sheets apps": GoogleSheetsAppsTitle,
+  "Gateway health": GatewayHealthTitle,
+  "Check Android version": CheckAndroidVersionTitle,
+};
+
+// Component to render thread title with translation support
+const ThreadTitle = ({ title }: { title: string | undefined }): ReactNode => {
+  if (!title) return <NewChatTitle />;
+
+  // Check if this is a known title that should be translated
+  const TranslatedComponent = knownTitles[title];
+  if (TranslatedComponent) {
+    return <TranslatedComponent />;
+  }
+
+  // Otherwise show the original title (user's custom text)
+  return title;
+};
 
 export const Sidebar = ({
   isOpen,
@@ -107,7 +149,7 @@ export const Sidebar = ({
             }`}
         >
           <Smartphone className="h-4 w-4" />
-          {showPhone ? "Hide UI" : "Show UI"}
+          {showPhone ? <span>Hide UI</span> : <span>Show UI</span>}
         </Button>
       </div>
 
@@ -170,7 +212,7 @@ export const Sidebar = ({
                   <div className={`w-1.5 h-1.5 rounded-full transition-all ${thread.id === activeId ? "bg-brand-pink shadow-[0_0_10px_rgba(255,46,144,0.5)]" : "bg-white/10"
                     }`} />
                   <p className="text-sm font-medium truncate">
-                    {thread.title || "New Stream"}
+                    <ThreadTitle title={thread.title} />
                   </p>
                 </div>
 
@@ -213,7 +255,12 @@ export const Sidebar = ({
       </div>
 
       {/* Snow Toggle - Bottom Section */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-white/5 space-y-3">
+        {/* Language Switcher */}
+        <div className="flex justify-center">
+          <LanguageSwitcher />
+        </div>
+
         <button
           onClick={onToggleSnow}
           className={`w-full h-10 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${showSnow
@@ -221,11 +268,11 @@ export const Sidebar = ({
             : "bg-white/[0.02] border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5"
             }`}
         >
-          <Snowflake 
-            className={`h-4 w-4 transition-transform duration-700 ${showSnow ? "animate-spin" : ""}`} 
-            style={{ animationDuration: "3s" }} 
+          <Snowflake
+            className={`h-4 w-4 transition-transform duration-700 ${showSnow ? "animate-spin" : ""}`}
+            style={{ animationDuration: "3s" }}
           />
-          {showSnow ? "Stop Snow" : "Let it Snow"}
+          {showSnow ? <span>Stop Snow</span> : <span>Let it Snow</span>}
         </button>
       </div>
 

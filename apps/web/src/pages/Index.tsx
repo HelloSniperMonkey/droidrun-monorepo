@@ -48,7 +48,7 @@ const Index = () => {
   }, [startNewThread]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background selection:bg-brand-pink/30">
+    <div className="flex h-screen overflow-hidden bg-background">
       <SnowAnimation isActive={showSnow} />
       <Sidebar
         isOpen={sidebarOpen}
@@ -80,9 +80,10 @@ const Index = () => {
         <div
           className={`
             relative overflow-hidden flex-shrink-0 bg-card border-l border-white/5
-            transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
+            transition-all duration-700
             ${showPhone ? 'w-[500px] opacity-100' : 'w-0 opacity-0'}
           `}
+          style={{ transitionTimingFunction: 'cubic-bezier(0.23,1,0.32,1)' }}
         >
           <div className="relative h-full flex flex-col z-10">
             <DeviceMirror />

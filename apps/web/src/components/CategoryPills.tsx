@@ -1,9 +1,21 @@
-import { AppWindow, Briefcase, MoreHorizontal } from "lucide-react";
+import { ReactNode } from "react";
+import { AppWindow, Briefcase, MoreHorizontal, LucideIcon } from "lucide-react";
 
-const categories = [
-  { id: "browser-tabs", label: "Browser", icon: AppWindow },
-  { id: "jobs", label: "Career", icon: Briefcase },
-  { id: "misc", label: "Device", icon: MoreHorizontal },
+interface Category {
+  id: string;
+  label: ReactNode;
+  icon: LucideIcon;
+}
+
+// Helper components for translatable labels
+const BrowserLabel = () => <span>Browser</span>;
+const CareerLabel = () => <span>Career</span>;
+const DeviceLabel = () => <span>Device</span>;
+
+const categories: Category[] = [
+  { id: "browser-tabs", label: <BrowserLabel />, icon: AppWindow },
+  { id: "jobs", label: <CareerLabel />, icon: Briefcase },
+  { id: "misc", label: <DeviceLabel />, icon: MoreHorizontal },
 ];
 
 interface CategoryPillsProps {

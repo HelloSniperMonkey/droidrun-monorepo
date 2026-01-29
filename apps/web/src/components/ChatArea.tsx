@@ -26,14 +26,35 @@ export const ChatArea = ({
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { attachments, addFiles, removeAttachment, reset } = useAttachments();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback((instant = false) => {
+    // Use requestAnimationFrame to ensure DOM is rendered before scrolling
+    requestAnimationFrame(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: instant ? "instant" : "smooth"
+        });
+      }
+    });
+  }, []);
 
+  // When thread changes, reset scroll to top first, then scroll to messages
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      // Reset scroll position immediately when switching threads
+      scrollContainerRef.current.scrollTop = 0;
+    }
+    // Then scroll to bottom after a short delay to allow content to render
+    const timer = setTimeout(() => scrollToBottom(true), 50);
+    return () => clearTimeout(timer);
+  }, [activeThread?.id, scrollToBottom]);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
-  }, [activeThread?.messages]);
+  }, [activeThread?.messages?.length, scrollToBottom]);
 
   useEffect(() => {
     reset();
@@ -95,29 +116,31 @@ export const ChatArea = ({
   const apiActions: EndpointAction[] = [
     {
       id: "check-android-version",
-      label: "Check Android version",
+      label: <span>Check Android version</span>,
+      labelText: "Check Android version",
       category: "misc",
       onRun: async () => {
         handleTaskWithPolling("Check Android Version", api.checkAndroidVersion);
         return {};
       }
     },
-    { id: "tabs-list", label: "List tabs", category: "browser-tabs", onRun: () => api.tabsList() },
-    { id: "tabs-organize", label: "Organize tabs", category: "browser-tabs", onRun: () => api.tabsOrganize() },
-    { id: "tabs-close", label: "Close old tabs", category: "browser-tabs", onRun: () => api.tabsCloseOld(7) },
-    { id: "tabs-merge", label: "Merge duplicates", category: "browser-tabs", onRun: () => api.tabsMergeDuplicates() },
-    { id: "tabs-sessions", label: "List tab sessions", category: "browser-tabs", onRun: () => api.tabsSessions() },
-    { id: "jobs-portals", label: "Job portals", category: "jobs", onRun: () => api.jobPortals() },
+    { id: "tabs-list", label: <span>List tabs</span>, labelText: "List tabs", category: "browser-tabs", onRun: () => api.tabsList() },
+    { id: "tabs-organize", label: <span>Organize tabs</span>, labelText: "Organize tabs", category: "browser-tabs", onRun: () => api.tabsOrganize() },
+    { id: "tabs-close", label: <span>Close old tabs</span>, labelText: "Close old tabs", category: "browser-tabs", onRun: () => api.tabsCloseOld(7) },
+    { id: "tabs-merge", label: <span>Merge duplicates</span>, labelText: "Merge duplicates", category: "browser-tabs", onRun: () => api.tabsMergeDuplicates() },
+    { id: "tabs-sessions", label: <span>List tab sessions</span>, labelText: "List tab sessions", category: "browser-tabs", onRun: () => api.tabsSessions() },
+    { id: "jobs-portals", label: <span>Job portals</span>, labelText: "Job portals", category: "jobs", onRun: () => api.jobPortals() },
     {
       id: "applications-sheets",
-      label: "Google Sheets apps",
+      label: <span>Google Sheets apps</span>,
+      labelText: "Google Sheets apps",
       category: "jobs",
       onRun: () => {
         window.open("https://docs.google.com/spreadsheets/d/1FupoVr33rLLIOtRrlYxFjXvlMqules-_49pVJcrdgx4/edit", "_blank");
         return Promise.resolve({ success: true, message: "Opened Google Sheets" });
       }
     },
-    { id: "health", label: "Gateway health", category: "misc", onRun: () => api.health() },
+    { id: "health", label: <span>Gateway health</span>, labelText: "Gateway health", category: "misc", onRun: () => api.health() },
   ];
 
   const handleActionResult = (label: string, result: any) => {
@@ -129,8 +152,8 @@ export const ChatArea = ({
     replaceLastAssistantMessage(content, steps.length > 0 ? steps : undefined);
   };
 
-  const handleActionStart = (action: { label: string }) => {
-    addMessage({ role: "user", content: action.label });
+  const handleActionStart = (action: EndpointAction) => {
+    addMessage({ role: "user", content: action.labelText });
     setAssistantPlaceholder();
   };
 
@@ -177,7 +200,7 @@ export const ChatArea = ({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
         {isEmptyState ? (
           <div className="flex flex-col items-center justify-center min-h-full px-8 py-24 max-w-4xl mx-auto space-y-12">
             <div className="text-center space-y-4">
@@ -202,54 +225,56 @@ export const ChatArea = ({
             </div>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
-            {conversation.map((message, i) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both`}
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className={`relative group max-w-[95%] transition-all duration-300 ${message.role === "user" ? "px-5 py-3 rounded-2xl bg-brand-pink text-white font-bold shadow-lg shadow-brand-pink/10" : "w-full"}`}>
-                  {message.role === "assistant" && (
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-brand-pink" />
+          <div className="min-h-full flex flex-col justify-end">
+            <div className="max-w-3xl mx-auto px-6 py-12 space-y-8 w-full">
+              {conversation.map((message, i) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both`}
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  <div className={`relative group max-w-[95%] transition-all duration-300 ${message.role === "user" ? "px-5 py-3 rounded-2xl bg-brand-pink text-white font-bold shadow-lg shadow-brand-pink/10" : "w-full"}`}>
+                    {message.role === "assistant" && (
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-brand-pink" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Iron Claw</span>
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Iron Claw</span>
-                    </div>
-                  )}
+                    )}
 
-                  <div className={`space-y-4 ${message.role === 'assistant' ? 'pl-9' : ''}`}>
-                    {message.attachments && message.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {message.attachments.map((att) => (
-                          <div key={att.id} className="relative group/att">
-                            {att.previewUrl ? <img src={att.previewUrl} alt={att.name} className="w-40 h-28 object-cover rounded-xl border border-white/5" /> : (
-                              <div className="px-3 py-2 bg-white/5 rounded-xl flex items-center gap-2 border border-white/5">
-                                <Box className="h-3 w-3 text-white/40" />
-                                <span className="text-[9px] uppercase font-bold tracking-widest text-white/60">{att.name}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="text-sm md:text-base leading-relaxed text-white">{message.content}</div>
-                    {message.role === "assistant" && message.steps && message.steps.length > 0 && (
-                      <div className="mt-6 space-y-3">
-                        {message.steps.map((step, idx) => (
-                          <div key={idx} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group/step">
-                            <div className="flex-shrink-0 w-5 h-5 rounded-md bg-black border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold text-brand-pink">{step.step_number}</div>
-                            <div className="flex-1 text-xs font-medium text-white/50 group-hover/step:text-white transition-colors">{step.description}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className={`space-y-4 ${message.role === 'assistant' ? 'pl-9' : ''}`}>
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {message.attachments.map((att) => (
+                            <div key={att.id} className="relative group/att">
+                              {att.previewUrl ? <img src={att.previewUrl} alt={att.name} className="w-40 h-28 object-cover rounded-xl border border-white/5" /> : (
+                                <div className="px-3 py-2 bg-white/5 rounded-xl flex items-center gap-2 border border-white/5">
+                                  <Box className="h-3 w-3 text-white/40" />
+                                  <span className="text-[9px] uppercase font-bold tracking-widest text-white/60">{att.name}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="text-sm md:text-base leading-relaxed text-white">{message.content}</div>
+                      {message.role === "assistant" && message.steps && message.steps.length > 0 && (
+                        <div className="mt-6 space-y-3">
+                          {message.steps.map((step, idx) => (
+                            <div key={idx} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group/step">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-md bg-black border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold text-brand-pink">{step.step_number}</div>
+                              <div className="flex-1 text-xs font-medium text-white/50 group-hover/step:text-white transition-colors">{step.description}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
           </div>
         )}
       </div>

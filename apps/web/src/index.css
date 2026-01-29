@@ -79,8 +79,17 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-brand-pink/30;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Outfit', sans-serif;
+  }
+
+  /* Text selection styling */
+  ::selection {
+    background-color: hsl(var(--brand-pink) / 0.3);
+  }
+
+  ::-moz-selection {
+    background-color: hsl(var(--brand-pink) / 0.3);
   }
 
   h1,

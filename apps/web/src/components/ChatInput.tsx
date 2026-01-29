@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { ChevronDown, Paperclip, ArrowUp, Mic } from "lucide-react";
 import { AttachmentPreview } from "./AttachmentPreview";
 import type { ChatAttachment } from "@/types/chat";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 interface ChatInputProps {
   value: string;
@@ -16,6 +17,32 @@ export const ChatInput = ({ value, onChange, onSubmit, attachments, onRemoveAtta
   const [modelOpen, setModelOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Track the text that was there before we started listening
+  const preListeningTextRef = useRef<string>("");
+
+  // Speech-to-text hook
+  const { isListening, interimTranscript, startListening, stopListening, error } = useSpeechToText({
+    language: "en-US",
+    onInterimResult: (transcript) => {
+      // Update input with pre-listening text + interim transcript
+      const prefix = preListeningTextRef.current;
+      const separator = prefix && !prefix.endsWith(" ") ? " " : "";
+      onChange(prefix + separator + transcript);
+    },
+    onFinalResult: (transcript) => {
+      // Update input with pre-listening text + final transcript + space
+      const prefix = preListeningTextRef.current;
+      const separator = prefix && !prefix.endsWith(" ") ? " " : "";
+      const newText = prefix + separator + transcript + " ";
+      onChange(newText);
+      // Update pre-listening text to include the final result for continuous dictation
+      preListeningTextRef.current = newText;
+    },
+    onError: (err) => {
+      console.error("Speech recognition error:", err);
+    },
+  });
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -32,9 +59,19 @@ export const ChatInput = ({ value, onChange, onSubmit, attachments, onRemoveAtta
     [onAddFiles],
   );
 
+  const handleMicClick = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      // Store the current text before we start listening
+      preListeningTextRef.current = value;
+      startListening();
+    }
+  }, [isListening, startListening, stopListening, value]);
+
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-secondary/50 border border-white/5 rounded-3xl p-3 shadow-2xl relative group focus:within:border-brand-pink/30 transition-all">
+      <div className="bg-secondary/50 border border-white/5 rounded-3xl p-3 shadow-2xl relative group focus-within:border-brand-pink/30 transition-all">
         <AttachmentPreview attachments={attachments} onRemove={onRemoveAttachment} />
 
         <div className="flex flex-col">
@@ -102,9 +139,23 @@ export const ChatInput = ({ value, onChange, onSubmit, attachments, onRemoveAtta
                 onChange={(e) => handleFiles(e.target.files)}
               />
 
-              <button className="p-2 rounded-xl text-white/20 hover:text-white/60 hover:bg-white/5 transition-all" title="Mic">
-                <Mic className="h-4 w-4" />
+              <button
+                onClick={handleMicClick}
+                className={`p-2 rounded-xl transition-all relative ${isListening
+                    ? "text-brand-pink bg-brand-pink/10 shadow-[0_0_15px_rgba(255,46,144,0.3)]"
+                    : "text-white/20 hover:text-white/60 hover:bg-white/5"
+                  }`}
+                title={isListening ? "Stop listening" : "Start voice input"}
+              >
+                <Mic className={`h-4 w-4 ${isListening ? "animate-pulse" : ""}`} />
+                {isListening && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand-pink animate-ping" />
+                )}
               </button>
+
+              {error && (
+                <span className="text-[9px] text-red-400 ml-2">{error}</span>
+              )}
             </div>
 
             <div className="flex items-center gap-3">

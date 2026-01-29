@@ -1,8 +1,10 @@
 import { ChevronRight } from "lucide-react";
+import { ReactNode } from "react";
 
 export interface EndpointAction {
   id: string;
-  label: string;
+  label: ReactNode;
+  labelText: string; // Plain text version for callbacks
   description?: string;
   category: string;
   onRun: () => Promise<any>;
@@ -20,9 +22,9 @@ export const EndpointActions = ({ actions, activeCategory, onResult, onStart }: 
     onStart?.(action);
     try {
       const result = await action.onRun();
-      onResult(action.label, result);
+      onResult(action.labelText, result);
     } catch (err: any) {
-      onResult(action.label, { error: err?.message || "Request failed" });
+      onResult(action.labelText, { error: err?.message || "Request failed" });
     }
   };
 

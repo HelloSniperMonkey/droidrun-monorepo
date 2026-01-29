@@ -1,0 +1,30 @@
+{
+  "version": 0.1,
+  "locale": "pt",
+  "entries": {
+    "44c54028205a": "404",
+    "2925349d88e1": "Ops! Página não encontrada",
+    "1aeb7cddd3a9": "Voltar ao início",
+    "38a6d552c65c": "Iron<span0>Claw</span0>",
+    "540500bed987": "Nova sequência",
+    "7ada0812f172": "Pesquisar...",
+    "0092148b0040": "Local",
+    "2dfff639c733": "Nuvem",
+    "8290f03275aa": "Banco de memória",
+    "ad9305f7f68c": "Setor vazio",
+    "47cde6931905": "Acesso à conta",
+    "792e2f391da5": "Iniciar sessão para sincronizar",
+    "47083afc2daa": "Soltar para enviar",
+    "7f307470b9f1": "Como posso ajudar, <span0>Iron Claw?</span0>",
+    "9b6c6853d403": "Protocolo neural V2.5 ativo e sincronizado",
+    "7c7924d7831b": "Transmissão WebRTC {expression0}",
+    "d7a7d17f370e": "{fps} FPS",
+    "db109f2adf7f": "{latency}ms",
+    "8670eabd5444": "{bitrate} kbps",
+    "3441935c99ce": "Iniciar transmissão",
+    "aab9bc6be389": "Selecionar idioma",
+    "7b6975b22d69": "Escreva a sua mensagem aqui...",
+    "369f7fc2af53": "Anexar",
+    "095d888b3cdd": "Microfone"
+  }
+}

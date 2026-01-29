@@ -53,6 +53,10 @@ data/tab_sessions/*
 *.log
 logs/
 
+# Lingo.dev cache (translations)
+apps/web/.lingo/cache/
+!apps/web/.lingo/cache/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db
@@ -63,4 +67,4 @@ Thumbs.db
 credentials.yaml
 secrets.yaml
 
-credentials.json
+credential.json
