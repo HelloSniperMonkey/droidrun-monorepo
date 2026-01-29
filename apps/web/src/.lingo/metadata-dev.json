@@ -42,246 +42,6 @@
         "column": 8
       }
     },
-    "17c3715812ab": {
-      "type": "content",
-      "sourceText": "Check Android version",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "17c3715812ab",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 119,
-        "column": 13
-      }
-    },
-    "aca976f160d5": {
-      "type": "content",
-      "sourceText": "List tabs",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "aca976f160d5",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 127,
-        "column": 30
-      }
-    },
-    "8fa2a2a79382": {
-      "type": "content",
-      "sourceText": "Organize tabs",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "8fa2a2a79382",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 128,
-        "column": 34
-      }
-    },
-    "0aeb50396c39": {
-      "type": "content",
-      "sourceText": "Close old tabs",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "0aeb50396c39",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 129,
-        "column": 31
-      }
-    },
-    "c7bb6b9b065b": {
-      "type": "content",
-      "sourceText": "Merge duplicates",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "c7bb6b9b065b",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 130,
-        "column": 31
-      }
-    },
-    "c01bc8d5be3f": {
-      "type": "content",
-      "sourceText": "List tab sessions",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "c01bc8d5be3f",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 131,
-        "column": 34
-      }
-    },
-    "eaf19233ae1e": {
-      "type": "content",
-      "sourceText": "Job portals",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "eaf19233ae1e",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 132,
-        "column": 33
-      }
-    },
-    "deca7963de74": {
-      "type": "content",
-      "sourceText": "Google Sheets apps",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "deca7963de74",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 135,
-        "column": 13
-      }
-    },
-    "e9e56beec69a": {
-      "type": "content",
-      "sourceText": "Gateway health",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "e9e56beec69a",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 143,
-        "column": 27
-      }
-    },
-    "47083afc2daa": {
-      "type": "content",
-      "sourceText": "Drop to Upload",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "47083afc2daa",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 198,
-        "column": 12
-      }
-    },
-    "7f307470b9f1": {
-      "type": "content",
-      "sourceText": "How can I help you, <span0>Iron Claw?</span0>",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "7f307470b9f1",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 207,
-        "column": 14
-      }
-    },
-    "9b6c6853d403": {
-      "type": "content",
-      "sourceText": "Neural Protocol V2.5 Active & Synced",
-      "context": {
-        "componentName": "ChatArea",
-        "filePath": "components/ChatArea.tsx"
-      },
-      "hash": "9b6c6853d403",
-      "location": {
-        "filePath": "components/ChatArea.tsx",
-        "line": 210,
-        "column": 14
-      }
-    },
-    "7b6975b22d69": {
-      "type": "attribute",
-      "sourceText": "Type your message here...",
-      "context": {
-        "attributeName": "placeholder",
-        "componentName": "ChatInput",
-        "filePath": "components/ChatInput.tsx"
-      },
-      "hash": "7b6975b22d69",
-      "location": {
-        "filePath": "components/ChatInput.tsx",
-        "line": 78,
-        "column": 10
-      }
-    },
-    "369f7fc2af53": {
-      "type": "attribute",
-      "sourceText": "Attach",
-      "context": {
-        "attributeName": "title",
-        "componentName": "ChatInput",
-        "filePath": "components/ChatInput.tsx"
-      },
-      "hash": "369f7fc2af53",
-      "location": {
-        "filePath": "components/ChatInput.tsx",
-        "line": 125,
-        "column": 14
-      }
-    },
-    "8387e6f6b42f": {
-      "type": "content",
-      "sourceText": "Browser",
-      "context": {
-        "componentName": "BrowserLabel",
-        "filePath": "components/CategoryPills.tsx"
-      },
-      "hash": "8387e6f6b42f",
-      "location": {
-        "filePath": "components/CategoryPills.tsx",
-        "line": 11,
-        "column": 27
-      }
-    },
-    "e3ba30599dd4": {
-      "type": "content",
-      "sourceText": "Career",
-      "context": {
-        "componentName": "CareerLabel",
-        "filePath": "components/CategoryPills.tsx"
-      },
-      "hash": "e3ba30599dd4",
-      "location": {
-        "filePath": "components/CategoryPills.tsx",
-        "line": 12,
-        "column": 26
-      }
-    },
-    "5b63c96f0d81": {
-      "type": "content",
-      "sourceText": "Device",
-      "context": {
-        "componentName": "DeviceLabel",
-        "filePath": "components/CategoryPills.tsx"
-      },
-      "hash": "5b63c96f0d81",
-      "location": {
-        "filePath": "components/CategoryPills.tsx",
-        "line": 13,
-        "column": 26
-      }
-    },
     "618605070086": {
       "type": "content",
       "sourceText": "New chat",
@@ -884,10 +644,250 @@
         "line": 685,
         "column": 120
       }
+    },
+    "17c3715812ab": {
+      "type": "content",
+      "sourceText": "Check Android version",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "17c3715812ab",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 119,
+        "column": 13
+      }
+    },
+    "aca976f160d5": {
+      "type": "content",
+      "sourceText": "List tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "aca976f160d5",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 127,
+        "column": 30
+      }
+    },
+    "8fa2a2a79382": {
+      "type": "content",
+      "sourceText": "Organize tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "8fa2a2a79382",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 128,
+        "column": 34
+      }
+    },
+    "0aeb50396c39": {
+      "type": "content",
+      "sourceText": "Close old tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "0aeb50396c39",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 129,
+        "column": 31
+      }
+    },
+    "c7bb6b9b065b": {
+      "type": "content",
+      "sourceText": "Merge duplicates",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "c7bb6b9b065b",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 130,
+        "column": 31
+      }
+    },
+    "c01bc8d5be3f": {
+      "type": "content",
+      "sourceText": "List tab sessions",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "c01bc8d5be3f",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 131,
+        "column": 34
+      }
+    },
+    "eaf19233ae1e": {
+      "type": "content",
+      "sourceText": "Job portals",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "eaf19233ae1e",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 132,
+        "column": 33
+      }
+    },
+    "deca7963de74": {
+      "type": "content",
+      "sourceText": "Google Sheets apps",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "deca7963de74",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 135,
+        "column": 13
+      }
+    },
+    "e9e56beec69a": {
+      "type": "content",
+      "sourceText": "Gateway health",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "e9e56beec69a",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 143,
+        "column": 27
+      }
+    },
+    "47083afc2daa": {
+      "type": "content",
+      "sourceText": "Drop to Upload",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "47083afc2daa",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 198,
+        "column": 12
+      }
+    },
+    "7f307470b9f1": {
+      "type": "content",
+      "sourceText": "How can I help you, <span0>Iron Claw?</span0>",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "7f307470b9f1",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 207,
+        "column": 14
+      }
+    },
+    "9b6c6853d403": {
+      "type": "content",
+      "sourceText": "Neural Protocol V2.5 Active & Synced",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "9b6c6853d403",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 210,
+        "column": 14
+      }
+    },
+    "7b6975b22d69": {
+      "type": "attribute",
+      "sourceText": "Type your message here...",
+      "context": {
+        "attributeName": "placeholder",
+        "componentName": "ChatInput",
+        "filePath": "components/ChatInput.tsx"
+      },
+      "hash": "7b6975b22d69",
+      "location": {
+        "filePath": "components/ChatInput.tsx",
+        "line": 78,
+        "column": 10
+      }
+    },
+    "369f7fc2af53": {
+      "type": "attribute",
+      "sourceText": "Attach",
+      "context": {
+        "attributeName": "title",
+        "componentName": "ChatInput",
+        "filePath": "components/ChatInput.tsx"
+      },
+      "hash": "369f7fc2af53",
+      "location": {
+        "filePath": "components/ChatInput.tsx",
+        "line": 125,
+        "column": 14
+      }
+    },
+    "8387e6f6b42f": {
+      "type": "content",
+      "sourceText": "Browser",
+      "context": {
+        "componentName": "BrowserLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "8387e6f6b42f",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 11,
+        "column": 27
+      }
+    },
+    "e3ba30599dd4": {
+      "type": "content",
+      "sourceText": "Career",
+      "context": {
+        "componentName": "CareerLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "e3ba30599dd4",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 12,
+        "column": 26
+      }
+    },
+    "5b63c96f0d81": {
+      "type": "content",
+      "sourceText": "Device",
+      "context": {
+        "componentName": "DeviceLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "5b63c96f0d81",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 13,
+        "column": 26
+      }
     }
   },
   "stats": {
     "totalEntries": 63,
-    "lastUpdated": "2026-01-29T12:29:23.250Z"
+    "lastUpdated": "2026-01-29T13:43:42.993Z"
   }
 }
