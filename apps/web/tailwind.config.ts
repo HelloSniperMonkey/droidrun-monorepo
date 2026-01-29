@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', 'sans-serif'],
+        display: ['Syne', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -63,6 +64,11 @@ export default {
         pill: {
           DEFAULT: "hsl(var(--pill-bg))",
           border: "hsl(var(--pill-border))",
+        },
+        brand: {
+          pink: "hsl(var(--brand-pink))",
+          purple: "hsl(var(--brand-purple))",
+          cyan: "hsl(var(--brand-cyan))",
         },
       },
       borderRadius: {

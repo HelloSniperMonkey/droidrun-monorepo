@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
-import { DeviceMirror } from "@/components/DeviceMirrorSimple";
+import { DeviceMirrorWebRTC as DeviceMirror } from "@/components/DeviceMirrorWebRTC";
+import { SnowAnimation } from "@/components/SnowAnimation";
 import { useLocalThreads } from "@/hooks/useLocalThreads";
-import { Smartphone, X } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mode, setMode] = useState<"local" | "cloud">("local");
   const [showPhone, setShowPhone] = useState(false);
+  const [showSnow, setShowSnow] = useState(false);
   const {
     threads,
     activeThread,
@@ -46,7 +48,8 @@ const Index = () => {
   }, [startNewThread]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background selection:bg-brand-pink/30">
+      <SnowAnimation isActive={showSnow} />
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -59,17 +62,12 @@ const Index = () => {
         onModeChange={setMode}
         showPhone={showPhone}
         onTogglePhone={() => setShowPhone(!showPhone)}
+        showSnow={showSnow}
+        onToggleSnow={() => setShowSnow(!showSnow)}
       />
 
-      {/* Main Content Area with Split View */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Chat Area - Takes remaining space */}
-        <div
-          className={`
-            flex-1 min-w-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-            ${showPhone ? 'mr-0' : 'mr-0'}
-          `}
-        >
+      <main className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 min-w-0 bg-background relative z-0">
           <ChatArea
             activeThread={activeThread}
             addMessage={addMessage}
@@ -78,82 +76,39 @@ const Index = () => {
           />
         </div>
 
-        {/* Phone Mirror Panel - Auto width based on content with smooth slide animation */}
+        {/* Phone Mirror Panel */}
         <div
           className={`
-            relative overflow-hidden flex-shrink-0
-            transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-            ${showPhone ? 'w-[400px] opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-full'}
+            relative overflow-hidden flex-shrink-0 bg-card border-l border-white/5
+            transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
+            ${showPhone ? 'w-[500px] opacity-100' : 'w-0 opacity-0'}
           `}
-          style={{
-            background: 'linear-gradient(180deg, hsl(240 10% 6%) 0%, hsl(280 12% 5%) 100%)'
-          }}
         >
-          {/* Divider with glow effect */}
-          <div
-            className={`
-              absolute left-0 top-0 bottom-0 w-px z-10
-              transition-opacity duration-300 delay-100
-              ${showPhone ? 'opacity-100' : 'opacity-0'}
-            `}
-            style={{
-              background: 'linear-gradient(180deg, hsl(340 70% 50% / 0.3) 0%, hsl(340 70% 50% / 0.1) 50%, hsl(340 70% 50% / 0.3) 100%)'
-            }}
-          />
-          
-          {/* Header with close button */}
-          <div
-            className={`
-              flex items-center justify-between px-4 py-3 border-b border-white/5
-              transition-all duration-400 ease-out
-              ${showPhone ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
-            `}
-            style={{ transitionDelay: showPhone ? '100ms' : '0ms' }}
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                <Smartphone className="h-4 w-4 text-pink-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-200">Device View</h3>
-                <p className="text-[10px] text-gray-500">⌘ ⇧ M to toggle</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-gray-500 hover:text-white hover:bg-white/5"
-              onClick={() => setShowPhone(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Phone Mirror Container - Full height with padding */}
-          <div
-            className={`
-              p-4 h-[calc(100vh-56px)] flex flex-col
-              transition-all duration-400 ease-out
-              ${showPhone ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}
-            `}
-            style={{ transitionDelay: showPhone ? '150ms' : '0ms' }}
-          >
+          <div className="relative h-full flex flex-col z-10">
             <DeviceMirror />
+
+            <button
+              onClick={() => setShowPhone(false)}
+              className="absolute top-1/2 -left-3 w-6 h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-white/20 hover:text-white transition-all z-50 group hover:bg-white/10"
+            >
+              <div className="w-1 h-4 bg-current rounded-full transition-transform group-hover:scale-y-125" />
+            </button>
           </div>
         </div>
 
         {/* Floating toggle when phone is hidden */}
         {!showPhone && (
-          <Button
-            onClick={() => setShowPhone(true)}
-            className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-105"
-            size="icon"
-            title="Show Phone (⌘ ⇧ M)"
-          >
-            <Smartphone className="h-5 w-5" />
-          </Button>
+          <div className="absolute bottom-10 right-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <button
+              onClick={() => setShowPhone(true)}
+              className="h-14 w-14 rounded-2xl bg-brand-pink text-white shadow-[0_0_30px_rgba(255,46,144,0.3)] transition-all hover:scale-110 active:scale-95 flex items-center justify-center group border-none relative"
+            >
+              <Smartphone className="h-6 w-6 transition-transform group-hover:rotate-12" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full border-2 border-brand-pink animate-pulse" />
+            </button>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

@@ -177,3 +177,99 @@ Frontend (localhost:3000)
 ## Review
 - Sources: `README.md`, `apps/gateway/src/ironclaw/main.py`, `apps/gateway/src/ironclaw/modules/job_hunter.py`, `apps/gateway/src/ironclaw/modules/temporal_guardian.py`, `apps/gateway/src/ironclaw/modules/vapi_interrupter.py`, `apps/job-hunter/src/job_hunter/orchestrator.py`, `all_endpoints.md`
 - Outputs: Drafted one-line solution, problem statement, and solution explanation aligned to the repo’s gateway + mobile automation architecture.
+
+---
+
+## WebRTC Screen Streaming via Droidrun Portal - January 29, 2026
+
+### Problem
+The existing mirror service has two approaches, both with issues:
+1. **MJPEG via ADB screencap** (`server.js`) - Works but only ~1-3 FPS, too slow for interaction
+2. **H.264/fMP4/MSE** (`server-h264-fmp4.js`) - Broken on Android 16 (OnePlus CPH2585) due to OEM hardening blocking `adb screenrecord` stdout piping
+
+### Solution
+Leverage the **Droidrun Portal app's built-in WebRTC streaming** capabilities. The Portal app already has:
+- `WebRtcManager.kt` - Full WebRTC implementation with H.264 encoding
+- `MediaProjectionAutoAccept.kt` - Auto-accepts the screen share dialog
+- Local WebSocket server on port 8081 with JSON-RPC commands
+
+### Architecture
+\`\`\`
+Browser (WebRTC Client)
+    │
+    ▼
+Mirror Service (server-webrtc.js) ◄─── WebSocket signaling relay
+    │
+    ▼ (ADB forward tcp:8081 -> localhost:8081)
+    │
+Droidrun Portal App (WebSocket server on :8081)
+    │
+    ▼
+WebRTC Peer Connection (H.264 video stream flows directly browser ↔ device)
+\`\`\`
+
+### WebRTC Signaling Protocol
+\`\`\`
+1. Browser → Server: { action: "start_stream" }
+2. Server → Portal: { method: "stream/start", params: { width, height, fps, sessionId, waitForOffer: false } }
+3. Portal → Server: { method: "webrtc/offer", params: { sdp } }
+4. Server → Browser: { type: "offer", sdp }
+5. Browser → Server: { type: "answer", sdp }
+6. Server → Portal: { method: "webrtc/answer", params: { sdp, sessionId } }
+7. Both sides exchange ICE candidates via: webrtc/ice
+8. WebRTC peer connection established, H.264 video flows directly
+\`\`\`
+
+### Todo
+- [x] Update todo.md with WebRTC implementation plan
+- [ ] Create WebRTC signaling server (\`apps/mirror-service/server-webrtc.js\`)
+- [ ] Update package.json with dependencies
+- [ ] Create browser WebRTC component (\`apps/web/src/components/DeviceMirrorWebRTC.tsx\`)
+- [ ] Integrate into web app with fallback to MJPEG
+- [ ] Test WebRTC streaming end-to-end on Android 16
+
+### Files Created/Modified
+
+**1. `apps/mirror-service/server-webrtc.js`** (NEW)
+WebRTC signaling server that:
+- Accepts Portal app connection on `ws://localhost:8082/device`
+- Accepts browser connection on `ws://localhost:8082/browser`
+- Relays WebRTC offer/answer/ICE between them
+- HTTP status endpoint on `http://localhost:8083/status`
+
+**2. `apps/mirror-service/package.json`** (MODIFIED)
+- Added `start:webrtc` script to run WebRTC server
+
+**3. `apps/web/src/components/DeviceMirrorWebRTC.tsx`** (NEW)
+React component that:
+- Connects to signaling server
+- Handles WebRTC peer connection
+- Displays H.264 video stream in `<video>` element
+- Shows real-time stats (FPS, latency, bitrate)
+- Supports touch/click input forwarding
+
+### How to Test
+
+1. Start the WebRTC signaling server:
+   ```bash
+   cd apps/mirror-service && npm run start:webrtc
+   ```
+
+2. Configure Portal app's reverse connection:
+   - Open Settings in Portal app
+   - Set Reverse Connection URL to: `ws://<your-ip>:8082/device`
+   - Enable "Connect to Host"
+
+3. Import and use the component in your app:
+   ```tsx
+   import { DeviceMirrorWebRTC } from '@/components/DeviceMirrorWebRTC';
+   // ...
+   <DeviceMirrorWebRTC />
+   ```
+
+### Review
+- Created WebRTC signaling server that bridges Portal app and browser
+- Created React component with full WebRTC H.264 playback
+- H.264 codec preference in SDP manipulation
+- Real-time stats collection from RTCPeerConnection
+- Build verified successfully

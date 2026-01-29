@@ -1,21 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import JMuxer from "jmuxer";
-import { 
-    Smartphone, 
-    RefreshCw, 
-    AlertCircle, 
-    Wifi, 
+import {
     WifiOff,
-    Home,
     ChevronLeft,
     Square,
     Maximize2,
     Minimize2,
     Volume2,
     VolumeX,
+    Zap,
+    Activity
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface DeviceInfo {
@@ -23,28 +17,68 @@ interface DeviceInfo {
     height: number;
 }
 
+interface FrameMetadata {
+    type: 'mjpeg_frame' | 'h264_frame';
+    timestamp: number;
+    size: number;
+    processingTime?: number;
+    isKeyframe?: boolean;
+}
+
 type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 export const DeviceMirror = () => {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
     const [error, setError] = useState<string | null>(null);
     const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [latency, setLatency] = useState<number | null>(null);
+    const [fps, setFps] = useState<number>(0);
+    const [processingTime, setProcessingTime] = useState<number>(0);
+    const [volume, setVolume] = useState<{ level: number; max: number }>({ level: 0, max: 100 });
+    const [streamType, setStreamType] = useState<'mjpeg' | 'h264'>('mjpeg');
+
     const wsRef = useRef<WebSocket | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const jmuxerRef = useRef<any>(null);
     const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const pingStartRef = useRef<number>(0);
+    const frameCountRef = useRef<number>(0);
+    const lastFpsUpdateRef = useRef<number>(Date.now());
+    const fpsHistoryRef = useRef<number[]>([]);
+    const processingTimeHistoryRef = useRef<number[]>([]);
+
+    // Frame metadata for binary data
+    const pendingFrameRef = useRef<FrameMetadata | null>(null);
 
     // Touch state for gesture detection
     const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
+    // ==========================================================================
+    // Connection Management
+    // ==========================================================================
+
+    const cleanup = useCallback(() => {
+        if (pingIntervalRef.current) {
+            clearInterval(pingIntervalRef.current);
+            pingIntervalRef.current = null;
+        }
+        // Revoke any blob URLs from img element
+        if (imgRef.current?.src?.startsWith('blob:')) {
+            URL.revokeObjectURL(imgRef.current.src);
+        }
+    }, []);
+
     const connect = useCallback(() => {
         setError(null);
         setConnectionState('connecting');
+        frameCountRef.current = 0;
+        lastFpsUpdateRef.current = Date.now();
+        fpsHistoryRef.current = [];
+        processingTimeHistoryRef.current = [];
+        setFps(0);
+        setProcessingTime(0);
 
         try {
             const ws = new WebSocket("ws://localhost:8080");
@@ -53,34 +87,55 @@ export const DeviceMirror = () => {
 
             ws.onopen = () => {
                 setConnectionState('connected');
-                console.log("Connected to screen mirror service");
+                console.log("Connected to mirror service");
 
-                if (videoRef.current && !jmuxerRef.current) {
-                    jmuxerRef.current = new JMuxer({
-                        node: videoRef.current,
-                        mode: "video",
-                        flushingTime: 0,
-                        fps: 60,
-                        debug: false,
-                    });
-                }
-
-                // Start ping interval for latency measurement
+                // Start ping/FPS interval
                 pingIntervalRef.current = setInterval(() => {
                     if (ws.readyState === WebSocket.OPEN) {
                         pingStartRef.current = performance.now();
                         ws.send(JSON.stringify({ type: 'ping' }));
                     }
-                }, 2000);
+
+                    // Calculate FPS with smoothing
+                    const now = Date.now();
+                    const elapsed = (now - lastFpsUpdateRef.current) / 1000;
+                    if (elapsed > 0) {
+                        const currentFps = Math.round(frameCountRef.current / elapsed);
+
+                        fpsHistoryRef.current.push(currentFps);
+                        if (fpsHistoryRef.current.length > 5) {
+                            fpsHistoryRef.current.shift();
+                        }
+
+                        const avgFps = Math.round(
+                            fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length
+                        );
+
+                        setFps(avgFps);
+                        frameCountRef.current = 0;
+                        lastFpsUpdateRef.current = now;
+
+                        // Average processing time
+                        if (processingTimeHistoryRef.current.length > 0) {
+                            const avgPt = Math.round(
+                                processingTimeHistoryRef.current.reduce((a, b) => a + b, 0) / processingTimeHistoryRef.current.length
+                            );
+                            setProcessingTime(avgPt);
+                            processingTimeHistoryRef.current = [];
+                        }
+                    }
+                }, 1000);
             };
 
-            ws.onmessage = (event) => {
-                // Handle JSON messages (control responses)
+            ws.onmessage = async (event) => {
                 if (typeof event.data === 'string') {
                     try {
                         const data = JSON.parse(event.data);
+
                         if (data.type === 'device_info') {
                             setDeviceInfo({ width: data.width, height: data.height });
+                        } else if (data.type === 'volume_info') {
+                            setVolume({ level: data.level, max: data.max });
                         } else if (data.type === 'pong') {
                             setLatency(Math.round(performance.now() - pingStartRef.current));
                         } else if (data.type === 'error') {
@@ -88,48 +143,67 @@ export const DeviceMirror = () => {
                             setConnectionState('error');
                         } else if (data.type === 'disconnected') {
                             setConnectionState('disconnected');
+                        } else if (data.type === 'mjpeg_frame' || data.type === 'h264_frame') {
+                            // Store frame metadata, wait for binary data
+                            pendingFrameRef.current = data as FrameMetadata;
+                            if (data.type === 'h264_frame') {
+                                setStreamType('h264');
+                            } else {
+                                setStreamType('mjpeg');
+                            }
                         }
                     } catch {
-                        // Not JSON, ignore
+                        // ignore
                     }
                     return;
                 }
 
-                // Handle binary video data
-                if (jmuxerRef.current && event.data instanceof ArrayBuffer) {
-                    jmuxerRef.current.feed({
-                        video: new Uint8Array(event.data),
-                    });
+                // Binary data = frame
+                if (event.data instanceof ArrayBuffer && pendingFrameRef.current) {
+                    const metadata = pendingFrameRef.current;
+                    pendingFrameRef.current = null;
+
+                    // Track processing time
+                    if (metadata.processingTime) {
+                        processingTimeHistoryRef.current.push(metadata.processingTime);
+                        if (processingTimeHistoryRef.current.length > 10) {
+                            processingTimeHistoryRef.current.shift();
+                        }
+                    }
+
+                    // Handle MJPEG frame
+                    if (metadata.type === 'mjpeg_frame' && imgRef.current) {
+                        const blob = new Blob([event.data], { type: 'image/jpeg' });
+                        const url = URL.createObjectURL(blob);
+
+                        // Revoke previous blob URL to prevent memory leak
+                        if (imgRef.current.src?.startsWith('blob:')) {
+                            URL.revokeObjectURL(imgRef.current.src);
+                        }
+
+                        imgRef.current.src = url;
+                        frameCountRef.current++;
+                    }
+
+                    // TODO: Handle H.264 frame with WebCodecs when server supports it
+                    // if (metadata.type === 'h264_frame') { ... }
                 }
             };
 
             ws.onclose = () => {
                 setConnectionState('disconnected');
-                console.log("Disconnected from screen mirror service");
                 cleanup();
             };
 
             ws.onerror = () => {
-                console.error("WebSocket error");
-                setError("Failed to connect to mirror service. Is it running?");
+                setError("Failed to connect to mirror service.");
                 setConnectionState('error');
             };
-        } catch (e) {
+        } catch {
             setError("Failed to initialize connection.");
             setConnectionState('error');
         }
-    }, []);
-
-    const cleanup = useCallback(() => {
-        if (pingIntervalRef.current) {
-            clearInterval(pingIntervalRef.current);
-            pingIntervalRef.current = null;
-        }
-        if (jmuxerRef.current) {
-            jmuxerRef.current.destroy();
-            jmuxerRef.current = null;
-        }
-    }, []);
+    }, [cleanup]);
 
     const disconnect = useCallback(() => {
         cleanup();
@@ -139,82 +213,99 @@ export const DeviceMirror = () => {
 
     useEffect(() => {
         connect();
-        return () => {
-            cleanup();
-            wsRef.current?.close();
-        };
-    }, [connect, cleanup]);
+        return () => disconnect();
+    }, [connect, disconnect]);
 
-    // Send control command
+    // ==========================================================================
+    // Input Handling
+    // ==========================================================================
+
     const sendCommand = useCallback((command: object) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify(command));
         }
     }, []);
 
-    // Handle tap on video canvas
-    const handleVideoClick = useCallback((e: React.MouseEvent<HTMLVideoElement>) => {
-        if (!videoRef.current || connectionState !== 'connected') return;
+    const getNormalizedCoords = useCallback((clientX: number, clientY: number) => {
+        const element = imgRef.current || canvasRef.current;
+        if (!element || !deviceInfo) return null;
 
-        const rect = videoRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
+        const rect = element.getBoundingClientRect();
+        const naturalWidth = 'naturalWidth' in element ? element.naturalWidth : element.width;
+        const naturalHeight = 'naturalHeight' in element ? element.naturalHeight : element.height;
+        const imgAspect = (naturalWidth || deviceInfo.width) / (naturalHeight || deviceInfo.height);
+        const containerAspect = rect.width / rect.height;
 
-        sendCommand({ type: 'tap', x, y });
-    }, [connectionState, sendCommand]);
+        let renderedWidth, renderedHeight, offsetX, offsetY;
 
-    // Handle touch start for swipe detection
-    const handleTouchStart = useCallback((e: React.TouchEvent<HTMLVideoElement>) => {
-        if (!videoRef.current) return;
-        const touch = e.touches[0];
-        const rect = videoRef.current.getBoundingClientRect();
-        touchStartRef.current = {
-            x: (touch.clientX - rect.left) / rect.width,
-            y: (touch.clientY - rect.top) / rect.height,
-            time: Date.now()
+        if (containerAspect > imgAspect) {
+            renderedHeight = rect.height;
+            renderedWidth = renderedHeight * imgAspect;
+            offsetX = (rect.width - renderedWidth) / 2;
+            offsetY = 0;
+        } else {
+            renderedWidth = rect.width;
+            renderedHeight = renderedWidth / imgAspect;
+            offsetX = 0;
+            offsetY = (rect.height - renderedHeight) / 2;
+        }
+
+        const posX = clientX - rect.left - offsetX;
+        const posY = clientY - rect.top - offsetY;
+
+        if (posX < 0 || posX > renderedWidth || posY < 0 || posY > renderedHeight) {
+            return null;
+        }
+
+        return {
+            x: Math.max(0, Math.min(1, posX / renderedWidth)),
+            y: Math.max(0, Math.min(1, posY / renderedHeight))
         };
-    }, []);
+    }, [deviceInfo]);
 
-    // Handle touch end for swipe detection
-    const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLVideoElement>) => {
-        if (!videoRef.current || !touchStartRef.current) return;
+    const handleStart = useCallback((clientX: number, clientY: number) => {
+        const coords = getNormalizedCoords(clientX, clientY);
+        if (coords) {
+            touchStartRef.current = { x: coords.x, y: coords.y, time: Date.now() };
+        }
+    }, [getNormalizedCoords]);
 
-        const touch = e.changedTouches[0];
-        const rect = videoRef.current.getBoundingClientRect();
-        const endX = (touch.clientX - rect.left) / rect.width;
-        const endY = (touch.clientY - rect.top) / rect.height;
+    const handleEnd = useCallback((clientX: number, clientY: number) => {
+        if (!touchStartRef.current) return;
+        const coords = getNormalizedCoords(clientX, clientY);
+        if (!coords) return;
+
         const duration = Date.now() - touchStartRef.current.time;
-
-        const dx = endX - touchStartRef.current.x;
-        const dy = endY - touchStartRef.current.y;
+        const dx = coords.x - touchStartRef.current.x;
+        const dy = coords.y - touchStartRef.current.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 0.05) {
-            // It's a swipe
+        if (distance > 0.03) {
             sendCommand({
                 type: 'swipe',
                 startX: touchStartRef.current.x,
                 startY: touchStartRef.current.y,
-                endX,
-                endY,
+                endX: coords.x,
+                endY: coords.y,
                 duration: Math.min(duration, 500)
             });
         } else {
-            // It's a tap
-            sendCommand({ type: 'tap', x: endX, y: endY });
+            sendCommand({ type: 'tap', x: coords.x, y: coords.y });
         }
-
         touchStartRef.current = null;
-    }, [sendCommand]);
+    }, [sendCommand, getNormalizedCoords]);
 
-    // Navigation buttons
+    const handleMouseDown = (e: React.MouseEvent) => { e.preventDefault(); handleStart(e.clientX, e.clientY); };
+    const handleMouseUp = (e: React.MouseEvent) => { e.preventDefault(); handleEnd(e.clientX, e.clientY); };
+    const handleTouchStart = (e: React.TouchEvent) => handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    const handleTouchEnd = (e: React.TouchEvent) => handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+
     const handleBack = () => sendCommand({ type: 'key', keycode: 'back' });
     const handleHome = () => sendCommand({ type: 'key', keycode: 'home' });
     const handleRecent = () => sendCommand({ type: 'key', keycode: 'recent' });
     const handleVolumeUp = () => sendCommand({ type: 'key', keycode: 'volume_up' });
     const handleVolumeDown = () => sendCommand({ type: 'key', keycode: 'volume_down' });
 
-    // Toggle fullscreen
     const toggleFullscreen = () => {
         if (!containerRef.current) return;
         if (!document.fullscreenElement) {
@@ -227,201 +318,181 @@ export const DeviceMirror = () => {
     };
 
     useEffect(() => {
-        const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
-        };
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        const h = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', h);
+        return () => document.removeEventListener('fullscreenchange', h);
     }, []);
-
-    const connectionColor = {
-        disconnected: 'bg-gray-500',
-        connecting: 'bg-yellow-500 animate-pulse',
-        connected: 'bg-emerald-500',
-        error: 'bg-red-500'
-    }[connectionState];
 
     const connectionText = {
         disconnected: 'Disconnected',
         connecting: 'Connecting...',
-        connected: 'Live',
-        error: 'Error'
+        connected: `${streamType === 'h264' ? 'H.264' : 'MJPEG'} Stream`,
+        error: 'System Link Failed'
     }[connectionState];
 
     return (
-        <div 
-            ref={containerRef}
-            className="flex flex-col h-full rounded-xl overflow-hidden relative group"
-            style={{
-                background: 'linear-gradient(180deg, hsl(240 10% 8%) 0%, hsl(280 15% 6%) 100%)',
-                boxShadow: '0 0 0 1px hsl(340 40% 20% / 0.3), 0 8px 32px hsl(0 0% 0% / 0.4), inset 0 1px 0 hsl(340 40% 30% / 0.1)'
-            }}
-        >
+        <div ref={containerRef} className="flex flex-col h-full relative bg-[#0a0a0c] border-l border-white/5 overflow-hidden">
+            <div className="absolute inset-0 mesh-gradient opacity-10 z-0" />
+
             {/* Header */}
-            <div className="px-3 py-2.5 flex items-center justify-between border-b border-white/5 bg-black/20 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Smartphone className="h-4 w-4 text-pink-400" />
-                        <span className={cn(
-                            "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-gray-900",
-                            connectionColor
-                        )} />
-                    </div>
-                    <span className="text-sm font-medium text-gray-200 tracking-tight">
-                        Android Mirror
-                    </span>
-                </div>
+            <div className="flex items-center justify-between px-6 py-4 relative z-10 border-b border-white/[0.03]">
                 <div className="flex items-center gap-3">
-                    {latency !== null && connectionState === 'connected' && (
-                        <span className="text-[10px] font-mono text-gray-500">
-                            {latency}ms
-                        </span>
+                    <div className={cn(
+                        "w-2 h-2 rounded-full transition-all duration-500",
+                        connectionState === 'connected' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" :
+                            connectionState === 'error' ? "bg-brand-pink shadow-[0_0_10px_rgba(255,46,144,0.5)]" : "bg-white/10"
+                    )} />
+                    <div>
+                        <h2 className="text-[10px] font-black text-white uppercase tracking-[0.4em] leading-none flex items-center gap-2">
+                            Neural Interface
+                            {connectionState === 'connected' && <Activity className="h-3 w-3 text-emerald-400 animate-pulse" />}
+                        </h2>
+                        <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1">{connectionText}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {fps > 0 && (
+                        <div className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5">
+                            <span className="text-[8px] font-black text-emerald-400/60 uppercase tracking-tighter">{fps} FPS</span>
+                        </div>
                     )}
-                    <div className="flex items-center gap-1.5">
-                        {connectionState === 'connected' ? (
-                            <Wifi className="h-3 w-3 text-emerald-400" />
-                        ) : (
-                            <WifiOff className="h-3 w-3 text-gray-500" />
-                        )}
-                        <span className="text-[11px] text-gray-400 font-medium">
-                            {connectionText}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Video Area */}
-            <div className="flex-1 relative flex items-center justify-center bg-black/60 overflow-hidden">
-                {connectionState === 'error' ? (
-                    <div className="p-6 max-w-xs text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <AlertCircle className="h-8 w-8 text-red-400" />
+                    {/* {latency !== null && latency > 0 && (
+                        <div className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5">
+                            <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-tighter">{latency}ms</span>
                         </div>
-                        <h3 className="text-sm font-semibold text-gray-200 mb-2">Connection Error</h3>
-                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                            {error || "Unable to connect to the mirror service."}
-                        </p>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-pink-500/30 hover:bg-pink-500/10 text-pink-400 hover:text-pink-300"
-                            onClick={connect}
-                        >
-                            <RefreshCw className="mr-2 h-3 w-3" />
-                            Retry Connection
-                        </Button>
-                    </div>
-                ) : connectionState === 'connecting' ? (
-                    <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-full border-2 border-pink-500/30 border-t-pink-500 animate-spin" />
-                        <p className="text-sm text-gray-400">Connecting to device...</p>
-                    </div>
-                ) : connectionState === 'disconnected' ? (
-                    <div className="p-6 max-w-xs text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center border border-gray-700/50">
-                            <Smartphone className="h-8 w-8 text-gray-500" />
+                    )} */}
+                    {processingTime > 0 && (
+                        <div className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5">
+                            <span className="text-[8px] font-black text-purple-400/60 uppercase tracking-tighter">{processingTime}ms PT</span>
                         </div>
-                        <h3 className="text-sm font-semibold text-gray-300 mb-2">Device Disconnected</h3>
-                        <p className="text-xs text-gray-500 mb-4">
-                            Connect your Android device via USB or WiFi ADB.
-                        </p>
-                        <Button
-                            size="sm"
-                            className="bg-pink-600 hover:bg-pink-500 text-white"
-                            onClick={connect}
-                        >
-                            <RefreshCw className="mr-2 h-3 w-3" />
-                            Connect
-                        </Button>
-                    </div>
-                ) : (
-                    <video
-                        ref={videoRef}
-                        className="w-full h-full object-contain cursor-crosshair"
-                        autoPlay
-                        muted
-                        playsInline
-                        onClick={handleVideoClick}
-                        onTouchStart={handleTouchStart}
-                        onTouchEnd={handleTouchEnd}
-                        style={{
-                            aspectRatio: deviceInfo ? `${deviceInfo.width}/${deviceInfo.height}` : 'auto',
-                        }}
-                    />
-                )}
-
-                {/* Fullscreen toggle - appears on hover */}
-                {connectionState === 'connected' && (
-                    <button
-                        onClick={toggleFullscreen}
-                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-gray-400 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                    >
-                        {isFullscreen ? (
-                            <Minimize2 className="h-4 w-4" />
-                        ) : (
-                            <Maximize2 className="h-4 w-4" />
-                        )}
+                    )}
+                    <button onClick={toggleFullscreen} className="p-2 rounded-lg text-white/20 hover:text-white transition-colors">
+                        {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
                     </button>
-                )}
+                </div>
             </div>
 
-            {/* Navigation Controls */}
-            {connectionState === 'connected' && (
-                <div className="px-3 py-2.5 border-t border-white/5 bg-black/30">
-                    <div className="flex items-center justify-between">
-                        {/* Android Nav Buttons */}
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={handleBack}
-                                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-                                title="Back"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={handleHome}
-                                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-                                title="Home"
-                            >
-                                <Home className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={handleRecent}
-                                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-                                title="Recent Apps"
-                            >
-                                <Square className="h-4 w-4" />
-                            </button>
+            {/* Device Stream Area */}
+            <div className="flex-1 flex items-center justify-center p-6 relative z-10 overflow-hidden">
+                <div
+                    className="relative w-full max-w-[380px] group/frame transition-all duration-700 ease-in-out"
+                    style={{
+                        aspectRatio: deviceInfo && deviceInfo.width > 0
+                            ? `${deviceInfo.width} / ${deviceInfo.height - 100}`
+                            : '9/19'
+                    }}
+                >
+                    {/* External Glow */}
+                    <div className="absolute inset-0 bg-brand-pink/5 blur-[100px] rounded-[3rem] opacity-0 group-hover/frame:opacity-100 transition-opacity duration-1000" />
+
+                    {/* Phone Frame */}
+                    <div className="relative w-full h-full rounded-[3rem] bg-black p-[2px] shadow-2xl ring-1 ring-white/10 transition-transform duration-500 hover:scale-[1.01]">
+                        {/* Inner Shell */}
+                        <div className="w-full h-full rounded-[2.9rem] bg-zinc-900/50 backdrop-blur-3xl p-2 relative overflow-hidden border border-white/10">
+                            {/* Screen Container */}
+                            <div className="w-full h-full rounded-[2rem] bg-black overflow-hidden relative border border-white/5">
+                                {connectionState === 'connected' ? (
+                                    <>
+                                        {/* MJPEG mode: use img element */}
+                                        {streamType === 'mjpeg' && (
+                                            <img
+                                                ref={imgRef}
+                                                className="w-full h-full object-contain cursor-crosshair relative z-10"
+                                                alt="Live Stream"
+                                                onMouseDown={handleMouseDown}
+                                                onMouseUp={handleMouseUp}
+                                                onTouchStart={handleTouchStart}
+                                                onTouchEnd={handleTouchEnd}
+                                                draggable={false}
+                                            />
+                                        )}
+                                        {/* H.264 mode: use canvas for WebCodecs */}
+                                        {streamType === 'h264' && (
+                                            <canvas
+                                                ref={canvasRef}
+                                                className="w-full h-full object-contain cursor-crosshair relative z-10"
+                                                onMouseDown={handleMouseDown}
+                                                onMouseUp={handleMouseUp}
+                                                onTouchStart={handleTouchStart}
+                                                onTouchEnd={handleTouchEnd}
+                                            />
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-30 p-8 text-center">
+                                        <div className="relative mb-8">
+                                            <div className="w-16 h-16 rounded-3xl bg-white/[0.03] border border-white/5 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-gradient-to-t from-brand-pink/10 to-transparent animate-pulse" />
+                                                <WifiOff className="h-6 w-6 text-white/20" />
+                                            </div>
+                                            {connectionState === 'connecting' && (
+                                                <div className="absolute -inset-4 border border-brand-pink/30 rounded-full animate-ping opacity-20" />
+                                            )}
+                                        </div>
+                                        <div className="space-y-2 mb-8">
+                                            <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                                                {connectionState === 'connecting' ? 'Establishing Link' : 'Core Offline'}
+                                            </h3>
+                                            <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter leading-relaxed">
+                                                {error || "Authorize ADB and check Neural status"}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={connect}
+                                            disabled={connectionState === 'connecting'}
+                                            className="w-full py-3 rounded-xl bg-white text-black text-[9px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-50"
+                                        >
+                                            {connectionState === 'connecting' ? "Connecting..." : "Initialize Link"}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Volume Controls */}
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={handleVolumeDown}
-                                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-                                title="Volume Down"
-                            >
-                                <VolumeX className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={handleVolumeUp}
-                                className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-                                title="Volume Up"
-                            >
-                                <Volume2 className="h-4 w-4" />
-                            </button>
-                        </div>
+                        {/* Physical Buttons Simulation */}
+                        <div className="absolute -left-[3px] top-24 w-[3px] h-8 bg-zinc-800 rounded-l-sm border-l border-white/10" />
+                        <div className="absolute -left-[3px] top-36 w-[3px] h-12 bg-zinc-800 rounded-l-sm border-l border-white/10" />
+                        <div className="absolute -left-[3px] top-52 w-[3px] h-12 bg-zinc-800 rounded-l-sm border-l border-white/10" />
+                        <div className="absolute -right-[3px] top-40 w-[3px] h-16 bg-zinc-800 rounded-r-sm border-r border-white/10" />
                     </div>
                 </div>
-            )}
+            </div>
 
-            {/* Decorative gradient overlay at bottom */}
-            <div 
-                className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-                style={{
-                    background: 'linear-gradient(to top, hsl(340 70% 45% / 0.05), transparent)'
-                }}
-            />
+            {/* Navigation & Controls */}
+            <div className="px-6 pb-8 space-y-6 relative z-10">
+                <div className="bg-black/40 backdrop-blur-xl border border-white/5 rounded-2xl flex items-center h-14 overflow-hidden shadow-2xl">
+                    <button onClick={handleBack} className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-all group border-r border-white/5">
+                        <ChevronLeft className="h-5 w-5 text-white/20 group-hover:text-white transition-colors" />
+                    </button>
+                    <button onClick={handleHome} className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-all group border-r border-white/5">
+                        <div className="w-5 h-5 rounded-full border-2 border-white/20 group-hover:border-white transition-colors" />
+                    </button>
+                    <button onClick={handleRecent} className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-all group">
+                        <Square className="h-4.5 w-4.5 text-white/20 group-hover:text-white transition-colors" />
+                    </button>
+                </div>
+
+                <div className="px-2">
+                    <div className="flex items-center gap-4 group/vol">
+                        <button onClick={handleVolumeDown} className="text-white/20 hover:text-white transition-colors">
+                            <VolumeX className="h-4 w-4" />
+                        </button>
+                        <div className="flex-1 h-1.5 bg-white/5 rounded-full relative overflow-hidden group-hover/vol:bg-white/10 transition-colors">
+                            <div
+                                className="absolute inset-y-0 left-0 bg-white/20 rounded-full transition-all duration-300"
+                                style={{ width: `${(volume.level / volume.max) * 100}%` }}
+                            />
+                            <div
+                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/vol:opacity-100 transition-all duration-300"
+                                style={{ left: `${(volume.level / volume.max) * 100}%`, transform: 'translate(-50%, -50%)' }}
+                            />
+                        </div>
+                        <button onClick={handleVolumeUp} className="text-white/20 hover:text-white transition-colors">
+                            <Volume2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

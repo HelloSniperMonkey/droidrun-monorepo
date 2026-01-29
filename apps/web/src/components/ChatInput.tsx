@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Paperclip, ArrowUp, Mic } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, Paperclip, ArrowUp, Mic } from "lucide-react";
 import { AttachmentPreview } from "./AttachmentPreview";
 import type { ChatAttachment } from "@/types/chat";
 
@@ -34,96 +33,93 @@ export const ChatInput = ({ value, onChange, onSubmit, attachments, onRemoveAtta
   );
 
   return (
-    <div className="w-full max-w-3xl mx-auto fade-in" style={{ animationDelay: "0.3s" }}>
-
-      <div
-        className="bg-card border border-border rounded-2xl overflow-visible input-glow transition-all"
-      >
+    <div className="w-full max-w-3xl mx-auto">
+      <div className="bg-secondary/50 border border-white/5 rounded-3xl p-3 shadow-2xl relative group focus:within:border-brand-pink/30 transition-all">
         <AttachmentPreview attachments={attachments} onRemove={onRemoveAttachment} />
 
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message here..."
-          rows={1}
-          className="w-full px-4 pt-4 pb-2 bg-transparent resize-none focus:outline-none text-foreground placeholder:text-muted-foreground min-h-[48px] max-h-32"
-          style={{ fieldSizing: "content" } as React.CSSProperties}
-        />
+        <div className="flex flex-col">
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message here..."
+            rows={1}
+            className="w-full px-5 pt-3 pb-2 bg-transparent resize-none focus:outline-none text-white placeholder:text-white/10 text-base font-medium min-h-[44px] max-h-48"
+            style={{ fieldSizing: "content" } as React.CSSProperties}
+          />
 
-        <div className="relative flex items-center justify-between px-3 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-primary hover:bg-accent transition-colors"
-                onClick={() => setModelOpen((v) => !v)}
-              >
-                {selectedModel}
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-              {modelOpen && (
-                <div className="absolute bottom-full mb-2 left-0 w-60 bg-card border border-border rounded-xl shadow-lg p-2 space-y-2 z-20">
-                  <div className="flex items-center justify-between px-2 text-xs font-medium text-muted-foreground">
-                    <span>Choose model</span>
-                    <button onClick={() => setModelOpen(false)} className="p-1 text-muted-foreground hover:text-foreground">
-                      <ChevronUp className="h-3 w-3" />
-                    </button>
+          <div className="flex items-center justify-between px-3 pb-2">
+            <div className="flex items-center gap-1">
+              <div className="relative">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white/60 hover:bg-white/5 transition-all"
+                  onClick={() => setModelOpen((v) => !v)}
+                >
+                  {selectedModel}
+                  <ChevronDown className={`h-3 w-3 transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {modelOpen && (
+                  <div className="absolute bottom-full mb-3 left-0 w-64 bg-card border border-white/5 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    {[
+                      "Gemini 2.5 Flash",
+                      "Gemini 2.0 Flash",
+                    ].map((model) => (
+                      <button
+                        key={model}
+                        className={`w-full text-left px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all flex items-center justify-between ${selectedModel === model
+                          ? "bg-brand-pink text-white"
+                          : "text-white/40 hover:bg-white/5 hover:text-white"
+                          }`}
+                        onClick={() => {
+                          setSelectedModel(model);
+                          setModelOpen(false);
+                        }}
+                      >
+                        {model}
+                      </button>
+                    ))}
                   </div>
-                  {[
-                    "Gemini 2.5 Flash",
-                    "Gemini 2.0 Flash",
-                  ].map((model) => (
-                    <button
-                      key={model}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors ${
-                        selectedModel === model ? "bg-accent text-accent-foreground" : "text-foreground"
-                      }`}
-                      onClick={() => {
-                        setSelectedModel(model);
-                        setModelOpen(false);
-                      }}
-                    >
-                      {model}
-                    </button>
-                  ))}
-                </div>
-              )}
+                )}
+              </div>
+
+              <div className="h-4 w-px bg-white/5 mx-1" />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 rounded-xl text-white/20 hover:text-white/60 hover:bg-white/5 transition-all"
+                title="Attach"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+
+              <input
+                type="file"
+                multiple
+                accept="image/*,application/pdf"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => handleFiles(e.target.files)}
+              />
+
+              <button className="p-2 rounded-xl text-white/20 hover:text-white/60 hover:bg-white/5 transition-all" title="Mic">
+                <Mic className="h-4 w-4" />
+              </button>
             </div>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
-
-            <input
-              type="file"
-              multiple
-              accept="image/*,application/pdf"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-              <Mic className="h-4 w-4" />
-            </button>
-            <Button
-              onClick={() => onSubmit(attachments)}
-              disabled={!value.trim() && attachments.length === 0}
-              size="icon"
-              className="h-9 w-9 rounded-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onSubmit(attachments)}
+                disabled={!value.trim() && attachments.length === 0}
+                className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center transition-all disabled:opacity-30 ${value.trim() || attachments.length > 0 ? "bg-brand-pink/20 text-brand-pink shadow-[0_0_20px_rgba(255,46,144,0.2)]" : "text-white/10"
+                  }`}
+              >
+                <ArrowUp className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      <p className="text-xs text-muted-foreground text-center mt-2">Press Enter to send, Shift + Enter for new line</p>
     </div>
   );
 };

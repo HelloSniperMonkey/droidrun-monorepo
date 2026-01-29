@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { PanelLeftClose, PanelLeft, Search, Plus, LogIn, Trash2, Smartphone } from "lucide-react";
+import { PanelLeftClose, PanelLeft, Search, Plus, Trash2, Smartphone, Box, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import {
   AlertDialog,
@@ -28,9 +27,25 @@ interface SidebarProps {
   onModeChange: (mode: "local" | "cloud") => void;
   showPhone: boolean;
   onTogglePhone: () => void;
+  showSnow: boolean;
+  onToggleSnow: () => void;
 }
 
-export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, onDelete, mode, onModeChange, showPhone, onTogglePhone }: SidebarProps) => {
+export const Sidebar = ({
+  isOpen,
+  onToggle,
+  threads,
+  activeId,
+  onSelect,
+  onNew,
+  onDelete,
+  mode,
+  onModeChange,
+  showPhone,
+  onTogglePhone,
+  showSnow,
+  onToggleSnow
+}: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -53,133 +68,183 @@ export const Sidebar = ({ isOpen, onToggle, threads, activeId, onSelect, onNew, 
   }
 
   return (
-    <aside className="w-60 h-screen sidebar-gradient flex flex-col border-r border-border/50 slide-in">
-      <div className="p-3 flex items-center justify-between">
+    <aside className="w-72 h-screen flex flex-col bg-card border-r border-border relative transition-all duration-300">
+      {/* Header */}
+      <div className="p-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 group cursor-pointer" onClick={onToggle}>
+          <div className="w-8 h-8 rounded-lg bg-brand-pink flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(255,46,144,0.3)]">
+            <PanelLeft className="h-4 w-4 text-white" />
+          </div>
+          <h1 className="text-xl font-black tracking-tighter text-white uppercase">
+            Iron<span className="text-brand-pink">Claw</span>
+          </h1>
+        </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="text-foreground/70 hover:text-foreground hover:bg-accent"
+          className="text-white/20 hover:text-white transition-colors"
         >
-          <PanelLeftClose className="h-5 w-5" />
+          <PanelLeftClose className="h-4 w-4" />
         </Button>
-        <h1 className="text-lg font-semibold text-gradient">Iron Claw</h1>
-        <div className="w-9" />
       </div>
 
-      <div className="px-3 mb-3">
-        <ModeToggle mode={mode} onChange={onModeChange} />
-      </div>
-
-      <div className="px-3 mb-3">
+      {/* Action Buttons */}
+      <div className="px-6 pb-6 space-y-3">
         <Button
-          variant={showPhone ? "default" : "ghost"}
-          className={`w-full justify-start gap-2 transition-all ${
-            showPhone 
-              ? "bg-pink-600/20 text-pink-400 hover:bg-pink-600/30 border border-pink-500/30" 
-              : "hover:bg-accent text-foreground/70 hover:text-foreground"
-          }`}
+          onClick={onNew}
+          className="w-full h-11 rounded-xl bg-secondary hover:bg-secondary/80 text-white font-bold text-sm border border-white/5 transition-all flex items-center justify-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          New Sequence
+        </Button>
+        <Button
           onClick={onTogglePhone}
+          variant="outline"
+          className={`w-full h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${showPhone
+            ? "bg-brand-pink/10 border-brand-pink/30 text-brand-pink"
+            : "bg-transparent border-white/10 text-white/60 hover:text-white hover:bg-white/5"
+            }`}
         >
           <Smartphone className="h-4 w-4" />
-          <span className="flex-1 text-left">{showPhone ? "Hide Phone" : "Show Phone"}</span>
-          <span className="text-[10px] opacity-50 font-normal">⌘⇧M</span>
+          {showPhone ? "Hide UI" : "Show UI"}
         </Button>
       </div>
 
-      <div className="px-3 mb-3">
-        <Button onClick={onNew} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium justify-between">
-          <div className="flex items-center">
-            <Plus className="h-4 w-4 mr-2" />
-            New Chat
-          </div>
-          <div className="flex items-center gap-1 text-xs opacity-60 font-normal">
-            <span className="text-[10px]">⇧</span>
-            <span className="text-[10px]">⌘</span>
-            <span>O</span>
-          </div>
-        </Button>
-      </div>
-
-      <div className="px-3 mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search your threads..."
+      {/* Search */}
+      <div className="px-6 mb-4">
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-brand-pink transition-colors" />
+          <input
+            type="text"
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-background/50 border-border/50 focus:border-primary/30 text-sm"
+            className="w-full bg-white/[0.03] border border-white/5 focus:border-brand-pink/30 rounded-xl py-2 pl-9 pr-4 text-sm text-white placeholder:text-white/10 outline-none transition-all"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 space-y-1">
-        {filtered.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8">No conversations yet</p>
-        ) : (
-          filtered.map((thread) => (
-            <div
-              key={thread.id}
-              onClick={() => onSelect(thread.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group ${thread.id === activeId
-                ? "bg-accent text-accent-foreground border border-border/60"
-                : "hover:bg-accent/70 text-foreground/80"
-                }`}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{thread.title || "New chat"}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {new Date(thread.updatedAt).toLocaleString()}
-                </p>
-              </div>
-              {thread.id === activeId && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                      title="Delete chat"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete chat?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete this conversation. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(thread.id);
-                        }}
-                        autoFocus
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-          ))
-        )}
+      {/* Mode Switches */}
+      <div className="px-6 mb-6">
+        <div className="p-1 bg-white/[0.03] border border-white/5 rounded-xl flex gap-1">
+          <button
+            onClick={() => onModeChange("local")}
+            className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${mode === "local" ? "bg-white text-black" : "text-white/20 hover:text-white/40"
+              }`}
+          >
+            Local
+          </button>
+          <button
+            onClick={() => onModeChange("cloud")}
+            className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${mode === "cloud" ? "bg-white text-black" : "text-white/20 hover:text-white/40"
+              }`}
+          >
+            Cloud
+          </button>
+        </div>
       </div>
 
-      <div className="p-3 border-t border-border/50">
+      {/* Thread List */}
+      <div className="flex-1 overflow-y-auto px-3 custom-scrollbar">
+        <div className="px-3 mb-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Memory Bank</span>
+        </div>
+        <div className="space-y-1 pb-8">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center opacity-10">
+              <Box className="h-8 w-8 mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Sector Empty</p>
+            </div>
+          ) : (
+            filtered.map((thread) => (
+              <div
+                key={thread.id}
+                onClick={() => onSelect(thread.id)}
+                className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all ${thread.id === activeId
+                  ? "bg-brand-pink/10 text-white"
+                  : "text-white/40 hover:text-white/80 hover:bg-white/[0.02]"
+                  }`}
+              >
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                  <div className={`w-1.5 h-1.5 rounded-full transition-all ${thread.id === activeId ? "bg-brand-pink shadow-[0_0_10px_rgba(255,46,144,0.5)]" : "bg-white/10"
+                    }`} />
+                  <p className="text-sm font-medium truncate">
+                    {thread.title || "New Stream"}
+                  </p>
+                </div>
+
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 px-2 rounded-lg text-white/20 hover:text-destructive hover:bg-destructive/10 transition-all font-bold text-[10px]"
+                      >
+                        PURGE
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-card border-white/5 text-white">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-lg font-black uppercase">Purge Memory?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-white/40">
+                          This core data stream will be permanently erased.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-transparent border-white/5 text-white hover:bg-white/5">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(thread.id);
+                          }}
+                          className="bg-destructive hover:bg-destructive/90 text-white border-none"
+                        >
+                          Purge
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Snow Toggle - Bottom Section */}
+      <div className="p-4 border-t border-white/5">
+        <button
+          onClick={onToggleSnow}
+          className={`w-full h-10 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${showSnow
+            ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+            : "bg-white/[0.02] border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5"
+            }`}
+        >
+          <Snowflake 
+            className={`h-4 w-4 transition-transform duration-700 ${showSnow ? "animate-spin" : ""}`} 
+            style={{ animationDuration: "3s" }} 
+          />
+          {showSnow ? "Stop Snow" : "Let it Snow"}
+        </button>
+      </div>
+
+      {/* Footer */}
+      <div className="p-6 border-t border-white/5 bg-black/[0.05]">
         <Button
           variant="ghost"
-          className="w-full justify-start text-foreground/70 hover:text-foreground hover:bg-accent"
+          className="w-full h-12 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 text-white/40 hover:text-white transition-all flex items-center justify-center gap-3 group"
         >
-          <LogIn className="h-4 w-4 mr-2" />
-          Login
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-brand-pink/20 transition-colors">
+            <Smartphone className="h-4 w-4 group-hover:text-brand-pink transition-colors" />
+          </div>
+          <div className="text-left flex-1">
+            <p className="text-[10px] mt-1.5 font-black uppercase tracking-widest leading-none">Account Access</p>
+            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Log in to sync session</p>
+          </div>
         </Button>
       </div>
     </aside>
   );
 };
+

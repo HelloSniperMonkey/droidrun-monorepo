@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { CategoryPills } from "./CategoryPills";
 import { EndpointActions, type EndpointAction } from "./EndpointActions";
 import { api } from "@/lib/api";
 import { useAttachments } from "@/hooks/useAttachments";
+import { Plus, Box } from "lucide-react";
 import type { ChatAttachment, ChatMessage, ChatThread, StepInfo } from "@/types/chat";
 
 interface ChatAreaProps {
@@ -24,9 +25,17 @@ export const ChatArea = ({
   const [isDragging, setIsDragging] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { attachments, addFiles, removeAttachment, reset } = useAttachments();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    // Clean attachments when switching threads (only when thread ID changes)
+    scrollToBottom();
+  }, [activeThread?.messages]);
+
+  useEffect(() => {
     reset();
   }, [activeThread?.id, reset]);
 
@@ -43,7 +52,6 @@ export const ChatArea = ({
     setInputValue("");
     reset();
     setSending(true);
-
     setAssistantPlaceholder();
 
     try {
@@ -69,42 +77,29 @@ export const ChatArea = ({
     e.stopPropagation();
     setIsDragging(false);
     const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleAddFiles(files);
-    }
+    if (files.length > 0) handleAddFiles(files);
   }, [handleAddFiles]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-  }, []);
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("Files")) setIsDragging(true);
+  };
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.dataTransfer.types.includes("Files")) {
-      setIsDragging(true);
-    }
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Only set to false if we're leaving the ChatArea entirely
-    if (e.currentTarget === e.target) {
-      setIsDragging(false);
-    }
-  }, []);
+    if (e.currentTarget === e.target) setIsDragging(false);
+  };
 
   const apiActions: EndpointAction[] = [
-    { 
-      id: "check-android-version", 
-      label: "Check Android version", 
-      category: "misc", 
+    {
+      id: "check-android-version",
+      label: "Check Android version",
+      category: "misc",
       onRun: async () => {
-        // Use polling wrapper for real-time step updates from actual device
         handleTaskWithPolling("Check Android Version", api.checkAndroidVersion);
-        return {}; // Return empty object to satisfy EndpointActions
+        return {};
       }
     },
     { id: "tabs-list", label: "List tabs", category: "browser-tabs", onRun: () => api.tabsList() },
@@ -113,213 +108,139 @@ export const ChatArea = ({
     { id: "tabs-merge", label: "Merge duplicates", category: "browser-tabs", onRun: () => api.tabsMergeDuplicates() },
     { id: "tabs-sessions", label: "List tab sessions", category: "browser-tabs", onRun: () => api.tabsSessions() },
     { id: "jobs-portals", label: "Job portals", category: "jobs", onRun: () => api.jobPortals() },
-    { 
-      id: "applications-sheets", 
-      label: "Google Sheets apps", 
-      category: "jobs", 
+    {
+      id: "applications-sheets",
+      label: "Google Sheets apps",
+      category: "jobs",
       onRun: () => {
         window.open("https://docs.google.com/spreadsheets/d/1FupoVr33rLLIOtRrlYxFjXvlMqules-_49pVJcrdgx4/edit", "_blank");
-        return Promise.resolve({ success: true, message: "Opened Google Sheets in new tab" });
+        return Promise.resolve({ success: true, message: "Opened Google Sheets" });
       }
     },
     { id: "health", label: "Gateway health", category: "misc", onRun: () => api.health() },
-    { id: "wallpaper-search", label: "Search wallpaper", category: "misc", onRun: () => api.searchWallpaper() },
-    { id: "daily-login-duolingo", label: "Daily login (Duolingo)", category: "misc", onRun: () => api.dailyLogin("Duolingo") },
   ];
 
-  const handleActionResult = (label: string, result: any, mode: "replace" | "add" = "replace") => {
-    // Skip if result is empty (handled by polling wrapper)
-    if (!result || Object.keys(result).length === 0) {
-      return;
-    }
-    
-    // Extract steps if present
+  const handleActionResult = (label: string, result: any) => {
+    if (!result || Object.keys(result).length === 0) return;
     const steps = result?.steps || [];
-    
-    // If we have steps, show a cleaner message
-    let content: string;
-    if (steps.length > 0) {
-      // Show just the high-level status, steps will be displayed separately
-      const status = result?.success ? "Success" : "Failed";
-      const message = result?.message || result?.error || "";
-      content = `${label}: ${status}${message ? ` - ${message}` : ""}`;
-    } else {
-      // No steps, show full JSON (legacy behavior)
-      content = `${label}:\n${JSON.stringify(result, null, 2)}`;
-    }
-    
-    const message = { 
-      role: "assistant" as const, 
-      content,
-      steps: steps.length > 0 ? steps : undefined,
-    };
-
-    if (mode === "replace") {
-      replaceLastAssistantMessage(content, steps.length > 0 ? steps : undefined);
-    } else {
-      addMessage(message);
-    }
+    let content = steps.length > 0
+      ? `${label}: ${result?.success ? "Success" : "Failed"}${result?.message ? ` - ${result.message}` : ""}`
+      : `${label}:\n${JSON.stringify(result, null, 2)}`;
+    replaceLastAssistantMessage(content, steps.length > 0 ? steps : undefined);
   };
 
   const handleActionStart = (action: { label: string }) => {
-    addMessage({
-      role: "user",
-      content: action.label,
-    });
+    addMessage({ role: "user", content: action.label });
     setAssistantPlaceholder();
   };
 
-  // Polling wrapper for async tasks with live step updates
   const handleTaskWithPolling = async (label: string, startTask: () => Promise<any>) => {
     try {
-      // Start the task
       const initialResult = await startTask();
       const taskId = initialResult?.task_id;
-
-      if (!taskId) {
-        // No task ID, treat as immediate result
-        handleActionResult(label, initialResult);
-        return;
-      }
-
-      // Show "Running..." message
+      if (!taskId) { handleActionResult(label, initialResult); return; }
       replaceLastAssistantMessage(`${label}: Running... (Task ID: ${taskId})`);
-
-      // Poll for completion with step updates
-      let attempts = 0;
-      const maxAttempts = 60; // 2 minutes max (60 * 2 seconds)
-      let lastStepCount = 0;
-      
+      let attempts = 0, lastStepCount = 0;
       const poll = async () => {
         attempts++;
-        
         try {
-          const status = await api.tabsStatus(taskId);
-          
-          // Update with latest steps even while running
+          const status = await api.tabsStatus(taskId) as any;
           const currentSteps = status.steps || [];
           if (currentSteps.length > lastStepCount) {
             lastStepCount = currentSteps.length;
-            // Show progress with current steps
-            replaceLastAssistantMessage(
-              `${label}: Running... (${currentSteps.length} steps)`,
-              currentSteps
-            );
+            replaceLastAssistantMessage(`${label}: Running... (${currentSteps.length} steps)`, currentSteps);
           }
-          
           if (status.status === "completed" || status.status === "failed") {
-            // Task finished, show final result with all steps
-            const message = status.message || (status.success ? "Completed successfully" : "Completed");
-            replaceLastAssistantMessage(
-              `${label}: ${status.success ? "Success" : "Completed"} - ${message}`,
-              status.steps || []
-            );
+            replaceLastAssistantMessage(`${label}: ${status.success ? "Success" : "Completed"} - ${status.message || ""}`, status.steps || []);
             return;
           }
-          
-          if (attempts >= maxAttempts) {
-            replaceLastAssistantMessage(`${label}: Task is taking longer than expected. Please check back later.`);
-            return;
-          }
-          
-          // Continue polling
-          setTimeout(poll, 2000);
-        } catch {
-          // Don't show errors to users - just indicate we're still working
-          if (attempts < maxAttempts) {
-            setTimeout(poll, 2000);
-          } else {
-            replaceLastAssistantMessage(`${label}: Task completed. Refresh to see results.`);
-          }
-        }
+          if (attempts < 60) setTimeout(poll, 2000);
+        } catch { if (attempts < 60) setTimeout(poll, 2000); }
       };
-
-      // Start polling after 2 seconds
       setTimeout(poll, 2000);
-
-    } catch {
-      // Don't expose errors - show user-friendly message
-      replaceLastAssistantMessage(`${label}: Task started. Please wait for results.`);
-    }
+    } catch { replaceLastAssistantMessage(`${label}: Task started.`); }
   };
 
   return (
     <div
-      className="flex-1 flex flex-col h-screen bg-chat overflow-hidden relative"
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
+      className="flex-1 flex flex-col h-screen bg-background relative overflow-hidden grain"
+      onDrop={handleDrop} onDragOver={handleDragOver} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave}
     >
-      {/* Drag overlay */}
+      <div className="absolute inset-0 mesh-gradient opacity-20 z-0" />
+
       {isDragging && (
-        <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary z-50 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-primary">Drop files here</p>
-            <p className="text-sm text-muted-foreground mt-2">Upload images or PDFs</p>
+        <div className="absolute inset-0 bg-brand-pink/5 backdrop-blur-xl border-2 border-dashed border-brand-pink/20 z-50 flex items-center justify-center animate-in fade-in duration-300">
+          <div className="text-center p-8 rounded-3xl bg-card border border-white/5 shadow-2xl">
+            <Plus className="h-12 w-12 text-brand-pink mx-auto mb-4 animate-bounce" />
+            <p className="text-2xl font-black text-white uppercase">Drop to Upload</p>
           </div>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
         {isEmptyState ? (
-          <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 space-y-6 text-center">
-            <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-2 fade-in">How can I help you?</h1>
-            <div className="w-full">
-              <CategoryPills activeCategory={activeCategory} onSelect={(cat) => setActiveCategory(activeCategory === cat ? null : cat)} />
-              <div className="mt-6">
-                <EndpointActions 
-                  actions={apiActions} 
-                  activeCategory={activeCategory} 
-                  onResult={handleActionResult}
-                  onStart={handleActionStart}
-                />
+          <div className="flex flex-col items-center justify-center min-h-full px-8 py-24 max-w-4xl mx-auto space-y-12">
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4 uppercase">
+                How can I help you, <span className="text-brand-pink">Iron Claw?</span>
+              </h1>
+              <p className="text-white/30 font-medium max-w-lg mx-auto uppercase tracking-widest text-[10px]">
+                Neural Protocol V2.5 Active & Synced
+              </p>
+            </div>
+
+            <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <div className="flex justify-center">
+                <div className="bg-white/[0.03] p-1 rounded-2xl border border-white/5 flex gap-1">
+                  <CategoryPills activeCategory={activeCategory} onSelect={(cat) => setActiveCategory(activeCategory === cat ? null : cat)} />
+                </div>
+              </div>
+
+              <div className="min-h-[160px]">
+                <EndpointActions actions={apiActions} activeCategory={activeCategory} onResult={handleActionResult} onStart={handleActionStart} />
               </div>
             </div>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
-            {conversation.map((message) => (
-              <div key={message.id} className={`fade-in ${message.role === "user" ? "text-right" : "text-left"}`}>
-                <div
-                  className={`inline-block max-w-[85%] px-4 py-3 rounded-2xl ${message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground"
-                    }`}
-                >
-                  <div className="space-y-2">
-                    {message.attachments?.length ? (
-                      <div className="flex gap-3 flex-wrap items-start">
-                        {message.attachments.map((att) => {
-                          const isImage = att.kind === "image" && att.previewUrl;
-                          return (
-                            <div key={att.id} className="relative">
-                              <div className={`flex items-center gap-3 rounded-2xl border border-border/70 bg-card/90 shadow-sm px-3 py-2 ${isImage ? "pr-5" : "pr-10"}`}>
-                                {isImage ? (
-                                  <img src={att.previewUrl} alt={att.name} className="h-16 w-16 rounded-xl object-cover" />
-                                ) : (
-                                  <div className="h-14 w-14 rounded-xl bg-red-500/90 flex items-center justify-center text-white text-xs font-semibold">
-                                    PDF
-                                  </div>
-                                )}
-                                <div className="max-w-[200px]">
-                                  <p className="text-sm font-semibold text-foreground truncate">{att.name}</p>
-                                  <p className="text-xs text-muted-foreground uppercase">{att.kind}</p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+          <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
+            {conversation.map((message, i) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both`}
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className={`relative group max-w-[95%] transition-all duration-300 ${message.role === "user" ? "px-5 py-3 rounded-2xl bg-brand-pink text-white font-bold shadow-lg shadow-brand-pink/10" : "w-full"}`}>
+                  {message.role === "assistant" && (
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-brand-pink" />
                       </div>
-                    ) : null}
-                    <div>{message.content}</div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Iron Claw</span>
+                    </div>
+                  )}
+
+                  <div className={`space-y-4 ${message.role === 'assistant' ? 'pl-9' : ''}`}>
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {message.attachments.map((att) => (
+                          <div key={att.id} className="relative group/att">
+                            {att.previewUrl ? <img src={att.previewUrl} alt={att.name} className="w-40 h-28 object-cover rounded-xl border border-white/5" /> : (
+                              <div className="px-3 py-2 bg-white/5 rounded-xl flex items-center gap-2 border border-white/5">
+                                <Box className="h-3 w-3 text-white/40" />
+                                <span className="text-[9px] uppercase font-bold tracking-widest text-white/60">{att.name}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="text-sm md:text-base leading-relaxed text-white">{message.content}</div>
                     {message.role === "assistant" && message.steps && message.steps.length > 0 && (
-                      <div className="mt-3 space-y-1 border-l-2 border-primary/30 pl-3">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Steps</p>
-                        {message.steps.map((step, i) => (
-                          <div key={i} className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground/80">Step {step.step_number}/{step.total_steps}:</span>{" "}
-                            {step.description}
+                      <div className="mt-6 space-y-3">
+                        {message.steps.map((step, idx) => (
+                          <div key={idx} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group/step">
+                            <div className="flex-shrink-0 w-5 h-5 rounded-md bg-black border border-white/10 flex items-center justify-center text-[9px] font-mono font-bold text-brand-pink">{step.step_number}</div>
+                            <div className="flex-1 text-xs font-medium text-white/50 group-hover/step:text-white transition-colors">{step.description}</div>
                           </div>
                         ))}
                       </div>
@@ -328,19 +249,15 @@ export const ChatArea = ({
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
-      <div className="p-4 pb-6">
-        <ChatInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={handleSubmit}
-          attachments={attachments}
-          onRemoveAttachment={removeAttachment}
-          onAddFiles={handleAddFiles}
-        />
+      <div className="p-8 pb-10 relative z-20">
+        <div className="max-w-4xl mx-auto">
+          <ChatInput value={inputValue} onChange={setInputValue} onSubmit={handleSubmit} attachments={attachments} onRemoveAttachment={removeAttachment} onAddFiles={handleAddFiles} />
+        </div>
       </div>
     </div>
   );

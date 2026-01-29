@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Screen Stream - MSE Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 20px;
+            padding: 4px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.5);
+        }
+        
+        video {
+            display: block;
+            max-width: 400px;
+            max-height: 70vh;
+            border-radius: 16px;
+            background: #111;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+        
+        .stat-label {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.6rem;
+            margin-top: 4px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.error {
+            background: #ef4444;
+            animation: none;
+        }
+        
+        .status-dot.connecting {
+            background: #f59e0b;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .log {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.5);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 3px 0;
+        }
+        
+        .log-entry.error {
+            color: #ef4444;
+        }
+        
+        .log-entry.success {
+            color: #10b981;
+        }
+        
+        .log-entry.warn {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Neural Stream</h1>
+    <p class="subtitle">H.264 / fMP4 / MSE Pipeline Test</p>
+    
+    <div class="container">
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+        
+        <div class="video-wrapper">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="bytesReceived">0 MB</div>
+                <div class="stat-label">Received</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="chunks">0</div>
+                <div class="stat-label">Chunks</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="buffer">0.00s</div>
+                <div class="stat-label">Buffer</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="queue">0</div>
+                <div class="stat-label">Queue</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="connectBtn" onclick="connect()">Connect</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+            <button onclick="document.getElementById('log').innerHTML = ''">Clear Log</button>
+        </div>
+    </div>
+    
+    <div class="log" id="log"></div>
+
+    <script>
+        // =================================================================
+        // Configuration
+        // =================================================================
+        
+        const CONFIG = {
+            WS_URL: 'ws://localhost:8080',
+            CODEC: 'video/mp4; codecs="avc1.42E01E"',
+            MAX_BUFFER_SECONDS: 1.0,
+            LATENCY_THRESHOLD: 0.5
+        };
+        
+        // =================================================================
+        // State
+        // =================================================================
+        
+        let ws = null;
+        let mediaSource = null;
+        let sourceBuffer = null;
+        let chunkQueue = [];
+        let isAppending = false;
+        let bytesReceived = 0;
+        let chunksReceived = 0;
+        let chunksAppended = 0;
+        
+        const video = document.getElementById('video');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const logEl = document.getElementById('log');
+        
+        // =================================================================
+        // Logging
+        // =================================================================
+        
+        function log(msg, type = '') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+        
+        // =================================================================
+        // Stats Update
+        // =================================================================
+        
+        function updateStats() {
+            document.getElementById('bytesReceived').textContent = 
+                (bytesReceived / 1024 / 1024).toFixed(2) + ' MB';
+            document.getElementById('chunks').textContent = chunksReceived;
+            document.getElementById('queue').textContent = chunkQueue.length;
+            
+            if (sourceBuffer && sourceBuffer.buffered.length > 0) {
+                const buffered = sourceBuffer.buffered.end(0) - video.currentTime;
+                document.getElementById('buffer').textContent = buffered.toFixed(2) + 's';
+            }
+        }
+        
+        setInterval(updateStats, 500);
+        
+        // =================================================================
+        // MSE Setup
+        // =================================================================
+        
+        function initMediaSource() {
+            log('Initializing MediaSource...');
+            
+            // Check MSE support
+            if (!('MediaSource' in window)) {
+                log('MediaSource not supported!', 'error');
+                return false;
+            }
+            
+            // Check codec support
+            if (!MediaSource.isTypeSupported(CONFIG.CODEC)) {
+                log(`Codec not supported: ${CONFIG.CODEC}`, 'error');
+                return false;
+            }
+            
+            log(`Codec supported: ${CONFIG.CODEC}`, 'success');
+            
+            mediaSource = new MediaSource();
+            video.src = URL.createObjectURL(mediaSource);
+            
+            mediaSource.addEventListener('sourceopen', () => {
+                log('MediaSource opened', 'success');
+                
+                try {
+                    sourceBuffer = mediaSource.addSourceBuffer(CONFIG.CODEC);
+                    sourceBuffer.mode = 'segments';
+                    log('SourceBuffer created', 'success');
+                    
+                    sourceBuffer.addEventListener('updateend', () => {
+                        isAppending = false;
+                        chunksAppended++;
+                        processQueue();
+                        trimBuffer();
+                    });
+                    
+                    sourceBuffer.addEventListener('error', (e) => {
+                        log('SourceBuffer error: ' + e, 'error');
+                    });
+                    
+                } catch (e) {
+                    log('Failed to create SourceBuffer: ' + e.message, 'error');
+                }
+            });
+            
+            mediaSource.addEventListener('sourceclose', () => {
+                log('MediaSource closed');
+            });
+            
+            return true;
+        }
+        
+        // =================================================================
+        // Buffer Management
+        // =================================================================
+        
+        function processQueue() {
+            if (!sourceBuffer || isAppending) return;
+            if (mediaSource.readyState !== 'open') return;
+            if (sourceBuffer.updating) return;
+            if (chunkQueue.length === 0) return;
+            
+            const chunk = chunkQueue.shift();
+            isAppending = true;
+            
+            try {
+                sourceBuffer.appendBuffer(chunk);
+            } catch (e) {
+                isAppending = false;
+                
+                if (e.name === 'QuotaExceededError') {
+                    log('QuotaExceededError - trimming buffer...', 'warn');
+                    chunkQueue.unshift(chunk);
+                    emergencyTrim();
+                } else {
+                    log('appendBuffer error: ' + e.message, 'error');
+                }
+            }
+        }
+        
+        function trimBuffer() {
+            if (!sourceBuffer || sourceBuffer.updating) return;
+            
+            try {
+                const buffered = sourceBuffer.buffered;
+                if (buffered.length === 0) return;
+                
+                const currentTime = video.currentTime;
+                const bufferStart = buffered.start(0);
+                const bufferEnd = buffered.end(buffered.length - 1);
+                
+                // Remove data before currentTime - 0.5s
+                const removeEnd = currentTime - 0.5;
+                if (removeEnd > bufferStart) {
+                    sourceBuffer.remove(bufferStart, removeEnd);
+                }
+                
+            } catch (e) {
+                // Ignore trim errors
+            }
+        }
+        
+        function emergencyTrim() {
+            if (!sourceBuffer || sourceBuffer.updating) return;
+            
+            try {
+                const buffered = sourceBuffer.buffered;
+                if (buffered.length > 0) {
+                    const removeEnd = buffered.start(0) + 1;
+                    sourceBuffer.remove(buffered.start(0), removeEnd);
+                }
+            } catch (e) {
+                log('Emergency trim failed: ' + e.message, 'error');
+            }
+        }
+        
+        function managePlayback() {
+            if (!sourceBuffer || video.paused) return;
+            
+            try {
+                const buffered = sourceBuffer.buffered;
+                if (buffered.length === 0) return;
+                
+                const bufferEnd = buffered.end(buffered.length - 1);
+                const latency = bufferEnd - video.currentTime;
+                
+                // Seek to live edge if too far behind
+                if (latency > CONFIG.MAX_BUFFER_SECONDS) {
+                    log(`Seeking to live (latency: ${latency.toFixed(2)}s)`, 'warn');
+                    video.currentTime = bufferEnd - 0.1;
+                    video.playbackRate = 1.0;
+                } else if (latency > CONFIG.LATENCY_THRESHOLD) {
+                    video.playbackRate = 1.05;
+                } else {
+                    video.playbackRate = 1.0;
+                }
+            } catch (e) {
+                // Ignore
+            }
+        }
+        
+        setInterval(managePlayback, 1000);
+        
+        // =================================================================
+        // WebSocket Connection
+        // =================================================================
+        
+        function connect() {
+            if (ws) {
+                log('Already connected', 'warn');
+                return;
+            }
+            
+            // Reset state
+            bytesReceived = 0;
+            chunksReceived = 0;
+            chunksAppended = 0;
+            chunkQueue = [];
+            isAppending = false;
+            
+            // Initialize MSE
+            if (!initMediaSource()) {
+                return;
+            }
+            
+            // Update UI
+            statusDot.className = 'status-dot connecting';
+            statusText.textContent = 'Connecting...';
+            connectBtn.disabled = true;
+            
+            log(`Connecting to ${CONFIG.WS_URL}...`);
+            
+            try {
+                ws = new WebSocket(CONFIG.WS_URL);
+                ws.binaryType = 'arraybuffer';
+                
+                ws.onopen = () => {
+                    log('WebSocket connected!', 'success');
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Connected';
+                    disconnectBtn.disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    // JSON message
+                    if (typeof event.data === 'string') {
+                        try {
+                            const data = JSON.parse(event.data);
+                            log(`Received: ${data.type}`, 'success');
+                            
+                            if (data.type === 'device_info') {
+                                log(`Device: ${data.width}x${data.height}, codec: ${data.codec}`);
+                            } else if (data.type === 'error') {
+                                log(`Server error: ${data.message}`, 'error');
+                            }
+                        } catch (e) {
+                            // Ignore
+                        }
+                        return;
+                    }
+                    
+                    // Binary = fMP4 chunk
+                    if (event.data instanceof ArrayBuffer) {
+                        bytesReceived += event.data.byteLength;
+                        chunksReceived++;
+                        
+                        chunkQueue.push(event.data);
+                        
+                        // Limit queue size
+                        if (chunkQueue.length > 100) {
+                            chunkQueue = chunkQueue.slice(-50);
+                            log('Queue overflow, dropped old chunks', 'warn');
+                        }
+                        
+                        processQueue();
+                        
+                        // Try to play
+                        if (video.paused) {
+                            video.play().catch(() => {});
+                        }
+                    }
+                };
+                
+                ws.onclose = () => {
+                    log('WebSocket disconnected');
+                    cleanup();
+                };
+                
+                ws.onerror = () => {
+                    log('WebSocket error', 'error');
+                    cleanup();
+                };
+                
+            } catch (e) {
+                log('Connection failed: ' + e.message, 'error');
+                cleanup();
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+            cleanup();
+        }
+        
+        function cleanup() {
+            ws = null;
+            sourceBuffer = null;
+            mediaSource = null;
+            
+            statusDot.className = 'status-dot error';
+            statusText.textContent = 'Disconnected';
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+            
+            if (video.src) {
+                URL.revokeObjectURL(video.src);
+            }
+        }
+        
+        // =================================================================
+        // Initialize
+        // =================================================================
+        
+        log('MSE Test Page Loaded');
+        log(`Codec: ${CONFIG.CODEC}`);
+        log(`MediaSource supported: ${'MediaSource' in window}`, 'MediaSource' in window ? 'success' : 'error');
+        log(`Codec supported: ${MediaSource.isTypeSupported(CONFIG.CODEC)}`, MediaSource.isTypeSupported(CONFIG.CODEC) ? 'success' : 'error');
+    </script>
+</body>
+</html>
