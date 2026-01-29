@@ -98,9 +98,9 @@ export const SnowAnimation = ({ isActive }: SnowAnimationProps) => {
 
     const getParticleCount = () => {
       const width = window.innerWidth;
-      if (width < 768) return 30;
-      if (width < 1200) return 60;
-      return 90;
+      if (width < 768) return 80;
+      if (width < 1200) return 150;
+      return 250;
     };
 
     const getSizeType = (): ParticleSize => {
@@ -123,7 +123,7 @@ export const SnowAnimation = ({ isActive }: SnowAnimationProps) => {
         y: Math.random() * canvas.height - canvas.height,
         size: config.size,
         sizeType,
-        speedY: (Math.random() * 0.8 + 0.5) * baseSpeed * config.speedMultiplier,
+        speedY: (Math.random() * 1.5 + 1.2) * baseSpeed * config.speedMultiplier * 2.5,
         speedX: (Math.random() - 0.5) * 0.3,
         opacity: 0,
         targetOpacity: config.opacity,
