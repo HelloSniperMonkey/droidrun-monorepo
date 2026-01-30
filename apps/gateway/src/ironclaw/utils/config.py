@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
     google_api_key: str = Field(default="", description="Google API key (alias for Gemini)")
     openai_api_key: str = Field(default="", description="OpenAI API key for Whisper transcription")
+    
+    # MobileRun
+    mobilerun_api_key: str = Field(default="", description="MobileRun cloud API key")
 
     # Vapi
     vapi_api_key: str = Field(default="", description="Vapi API key")

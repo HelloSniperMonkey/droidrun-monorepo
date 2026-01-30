@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
-import { DeviceMirrorWebRTC as DeviceMirror } from "@/components/DeviceMirrorWebRTC";
+import { DeviceMirrorWebRTC } from "@/components/DeviceMirrorWebRTC";
+import { DeviceMirrorCloud } from "@/components/DeviceMirrorCloud";
 import { SnowAnimation } from "@/components/SnowAnimation";
 import { useLocalThreads } from "@/hooks/useLocalThreads";
-import { Smartphone } from "lucide-react";
+import { Smartphone, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -86,7 +87,8 @@ const Index = () => {
           style={{ transitionTimingFunction: 'cubic-bezier(0.23,1,0.32,1)' }}
         >
           <div className="relative h-full flex flex-col z-10">
-            <DeviceMirror />
+            {/* Render appropriate mirror based on mode */}
+            {mode === 'local' ? <DeviceMirrorWebRTC /> : <DeviceMirrorCloud />}
 
             <button
               onClick={() => setShowPhone(false)}
@@ -102,10 +104,18 @@ const Index = () => {
           <div className="absolute bottom-10 right-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <button
               onClick={() => setShowPhone(true)}
-              className="h-14 w-14 rounded-2xl bg-brand-pink text-white shadow-[0_0_30px_rgba(255,46,144,0.3)] transition-all hover:scale-110 active:scale-95 flex items-center justify-center group border-none relative"
+              className={`h-14 w-14 rounded-2xl text-white transition-all hover:scale-110 active:scale-95 flex items-center justify-center group border-none relative ${mode === 'cloud'
+                  ? 'bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)]'
+                  : 'bg-brand-pink shadow-[0_0_30px_rgba(255,46,144,0.3)]'
+                }`}
             >
-              <Smartphone className="h-6 w-6 transition-transform group-hover:rotate-12" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full border-2 border-brand-pink animate-pulse" />
+              {mode === 'cloud' ? (
+                <Cloud className="h-6 w-6 transition-transform group-hover:scale-110" />
+              ) : (
+                <Smartphone className="h-6 w-6 transition-transform group-hover:rotate-12" />
+              )}
+              <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 animate-pulse ${mode === 'cloud' ? 'bg-white border-cyan-500' : 'bg-white border-brand-pink'
+                }`} />
             </button>
           </div>
         )}

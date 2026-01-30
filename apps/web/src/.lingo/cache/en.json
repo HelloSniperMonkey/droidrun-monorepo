@@ -58,6 +58,24 @@
     "3a69eaf68540": "Google Sheets apps",
     "480370ae3b7a": "Organize tabs",
     "0c00a0b2827f": "Check Android version",
-    "8e61ac60a246": "Job portals"
+    "8e61ac60a246": "Job portals",
+    "109539fb5be5": "<Cloud0></Cloud0> Cloud Stream {expression0}",
+    "099dc707ef7d": "{fps} FPS",
+    "aa7eb7d6953f": "{latency}ms",
+    "f132d1446a4f": "{bitrate} kbps",
+    "18cc350eb803": "Loading devices...",
+    "01ba6422c46c": "No devices found",
+    "7ea37c03b0aa": "Connecting to Cloud",
+    "e108868c0489": "Establishing WebRTC",
+    "df9f81ed811f": "Select a Device",
+    "44708bf0fe5a": "Stream Offline",
+    "f26bf56d3ca4": "Choose a cloud device above",
+    "ecbcefab59e3": "Click below to reconnect",
+    "a268857018f1": "Connect to Cloud",
+    "e324a50bbe6f": "Disconnected",
+    "a8469d3356f9": "Connecting to Cloud...",
+    "dc85848f588d": "Establishing WebRTC...",
+    "c52901cb6ecc": "Cloud H.264 Stream",
+    "6565ba724a01": "Connection Failed"
   }
 }

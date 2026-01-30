@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import alarms, health, hitl, jobs, tabs, wake, chat, speech
+from .api import alarms, health, hitl, jobs, tabs, wake, chat, speech, mobilerun, mobilerun_ws
 from .utils.config import get_settings
 
 # Configure logging
@@ -80,6 +80,8 @@ def create_app() -> FastAPI:
     app.include_router(hitl.router, prefix="/api/v1/hitl", tags=["Human-in-the-Loop"])
     app.include_router(chat.router, prefix="/api", tags=["Chat & Web"])
     app.include_router(speech.router, prefix="/api/v1/speech", tags=["Speech-to-Text"])
+    app.include_router(mobilerun.router, prefix="/api/v1/mobilerun", tags=["MobileRun Cloud"])
+    app.include_router(mobilerun_ws.router, prefix="/api/v1/mobilerun", tags=["MobileRun WebSocket"])
 
     return app
 
