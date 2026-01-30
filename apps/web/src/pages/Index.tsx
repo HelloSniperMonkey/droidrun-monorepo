@@ -74,6 +74,7 @@ const Index = () => {
             addMessage={addMessage}
             setAssistantPlaceholder={setAssistantPlaceholder}
             replaceLastAssistantMessage={replaceLastAssistantMessage}
+            mode={mode}
           />
         </div>
 

@@ -50,6 +50,7 @@ class Task(BaseModel):
     result: Optional[Any] = None
     screenshots: list[str] = Field(default_factory=list)
     trajectory: list[dict] = Field(default_factory=list)
+    stream_url: Optional[str] = None  # For v1 API streaming
 
     class Config:
         populate_by_name = True

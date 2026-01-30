@@ -12,6 +12,7 @@ interface ChatAreaProps {
   addMessage: (message: Omit<ChatMessage, "id" | "createdAt">) => void;
   setAssistantPlaceholder: () => void;
   replaceLastAssistantMessage: (content: string, steps?: StepInfo[]) => void;
+  mode?: "local" | "cloud";
 }
 
 export const ChatArea = ({
@@ -19,11 +20,13 @@ export const ChatArea = ({
   addMessage,
   setAssistantPlaceholder,
   replaceLastAssistantMessage,
+  mode,
 }: ChatAreaProps) => {
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [llmModel, setLlmModel] = useState("google/gemini-2.5-flash");
   const { attachments, addFiles, removeAttachment, reset } = useAttachments();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -77,7 +80,7 @@ export const ChatArea = ({
 
     try {
       const uploadedFilename = attached[0]?.uploadedFilename;
-      const res = await api.chat(userMessage.content, uploadedFilename);
+      const res = await api.chat(userMessage.content, uploadedFilename, llmModel, mode);
       replaceLastAssistantMessage(res.response || "Done.", res.steps);
     } catch (err: any) {
       replaceLastAssistantMessage(err?.message || "Failed to get response");
@@ -281,7 +284,7 @@ export const ChatArea = ({
 
       <div className="p-8 pb-10 relative z-20">
         <div className="max-w-4xl mx-auto">
-          <ChatInput value={inputValue} onChange={setInputValue} onSubmit={handleSubmit} attachments={attachments} onRemoveAttachment={removeAttachment} onAddFiles={handleAddFiles} />
+          <ChatInput value={inputValue} onChange={setInputValue} onSubmit={handleSubmit} attachments={attachments} onRemoveAttachment={removeAttachment} onAddFiles={handleAddFiles} llmModel={llmModel} onLlmModelChange={setLlmModel} />
         </div>
       </div>
     </div>

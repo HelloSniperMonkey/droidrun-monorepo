@@ -173,6 +173,7 @@ class ExecutionService:
         max_steps: int = 15,
         vision: bool = True,
         reasoning: bool = False,
+        llm_model: Optional[str] = None,
         force_backend: Optional[ExecutionBackend] = None,
     ) -> ExecutionResult:
         """
@@ -183,6 +184,7 @@ class ExecutionService:
             max_steps: Maximum execution steps
             vision: Enable vision mode (screenshots)
             reasoning: Enable reasoning/planning mode
+            llm_model: LLM model to use (for MobileRun Cloud)
             force_backend: Force a specific backend (optional)
 
         Returns:
@@ -193,7 +195,7 @@ class ExecutionService:
         logger.info(f"Executing on {backend.value}: {command[:50]}...")
 
         if backend == ExecutionBackend.MOBILERUN_CLOUD:
-            return await self._execute_mobilerun(command, max_steps, vision, reasoning)
+            return await self._execute_mobilerun(command, max_steps, vision, reasoning, llm_model)
         elif backend == ExecutionBackend.DROIDRUN_LOCAL:
             return await self._execute_droidrun(command, max_steps, vision, reasoning)
         else:
@@ -209,6 +211,7 @@ class ExecutionService:
         max_steps: int,
         vision: bool,
         reasoning: bool,
+        llm_model: Optional[str] = None,
     ) -> ExecutionResult:
         """Execute via MobileRun Cloud."""
         try:
@@ -219,25 +222,21 @@ class ExecutionService:
                 max_steps=max_steps,
                 vision=vision,
                 reasoning=reasoning,
+                llm_model=llm_model,
             )
 
-            # Get screenshots if available
-            screenshots = []
-            try:
-                screenshots = await client.get_task_screenshots(task.task_id)
-            except Exception:
-                pass
-
+            # The v1 API returns immediately with task creation confirmation
+            # For now, return success with the task ID
             return ExecutionResult(
-                success=task.status.value == "completed",
+                success=True,
                 backend=ExecutionBackend.MOBILERUN_CLOUD,
-                output=str(task.result) if task.result else "Task completed",
+                output=f"Task created successfully. Task ID: {task.task_id}",
                 task_id=task.task_id,
-                screenshots=screenshots,
-                steps=len(task.trajectory) if task.trajectory else 0,
+                screenshots=[],
+                steps=0,
             )
         except Exception as e:
-            logger.error(f"MobileRun execution failed: {e}")
+            logger.error(f"MobileRun execution failed: {e}", exc_info=True)
             return ExecutionResult(
                 success=False,
                 backend=ExecutionBackend.MOBILERUN_CLOUD,
@@ -299,6 +298,7 @@ class ExecutionService:
         max_steps: int = 15,
         vision: bool = True,
         reasoning: bool = False,
+        llm_model: Optional[str] = None,
     ) -> AsyncIterator[dict]:
         """
         Execute with streaming updates (MobileRun only).
@@ -316,11 +316,12 @@ class ExecutionService:
                 max_steps=max_steps,
                 vision=vision,
                 reasoning=reasoning,
+                llm_model=llm_model,
             ):
                 yield update
         else:
             # For DroidRun, execute and yield single result
-            result = await self.execute(command, max_steps, vision, reasoning)
+            result = await self.execute(command, max_steps, vision, reasoning, llm_model)
             yield {
                 "status": "completed" if result.success else "failed",
                 "output": result.output,

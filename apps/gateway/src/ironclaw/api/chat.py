@@ -27,6 +27,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 class ChatRequest(BaseModel):
     message: str
     image_filename: Optional[str] = None
+    llm_model: Optional[str] = None
+    mode: Optional[str] = "cloud"  # "local" or "cloud"
 
 
 class StepInfo(BaseModel):
@@ -201,6 +203,56 @@ async def chat_handler(request: ChatRequest):
                 uploaded_pdf = max(pdfs, key=lambda f: f.stat().st_mtime)
 
         return await _handle_job_hunting(request.message, uploaded_pdf)
+
+    # Check if we should use cloud mode (MobileRun API)
+    import os
+    settings = get_settings()
+    mobilerun_device_id = os.getenv("MOBILERUN_DEVICE_ID")
+    
+    # Use cloud mode if:
+    # 1. Frontend explicitly requests it via mode="cloud" OR
+    # 2. Cloud credentials are configured and no local mode specified
+    use_cloud_mode = (
+        request.mode == "cloud" or 
+        (request.mode != "local" and bool(settings.mobilerun_api_key and mobilerun_device_id))
+    )
+    
+    if use_cloud_mode:
+        # Use MobileRun Cloud API directly
+        llm_model = request.llm_model or "google/gemini-2.5-flash"  # Default model
+        logger.info(f"Using MobileRun Cloud with model: {llm_model}")
+        try:
+            from ..services.execution_service import get_execution_service
+            
+            service = get_execution_service()
+            result = await service.execute(
+                command=request.message,
+                max_steps=100,
+                vision=True,
+                reasoning=True,
+                llm_model=llm_model,
+            )
+            
+            if result.success:
+                response_text = result.output or "Task completed successfully."
+            else:
+                response_text = f"Task failed: {result.error or 'Unknown error'}"
+            
+            return ChatResponse(
+                response=response_text,
+                steps=_normalize_steps([f"Step {i+1}" for i in range(result.steps)]) if result.steps else None,
+                success=result.success,
+            )
+        except Exception as e:
+            logger.error(f"Cloud execution failed with error: {e}", exc_info=True)
+            # If mode is explicitly "cloud", don't fall back - return the error
+            if request.mode == "cloud":
+                return ChatResponse(
+                    response=f"Cloud execution failed: {str(e)}",
+                    success=False,
+                )
+            # Otherwise fall back to local agent execution
+            logger.info("Falling back to local agent execution")
 
     try:
         # Create the agent

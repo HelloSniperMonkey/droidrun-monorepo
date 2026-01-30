@@ -22,12 +22,15 @@ MOBILERUN_API_URL = "https://api.mobilerun.ai"
 class LLMModel(str, Enum):
     """Available LLM models for Mobilerun tasks."""
 
-    GEMINI_25_FLASH = "google/gemini-2.5-flash"
-    GEMINI_25_PRO = "google/gemini-2.5-flash"
-    GEMINI_3_FLASH = "google/gemini-3-flash"
     GPT_51 = "openai/gpt-5.1"
     GPT_52 = "openai/gpt-5.2"
+    GEMINI_25_FLASH = "google/gemini-2.5-flash"
+    GEMINI_25_PRO = "google/gemini-2.5-pro"
+    GEMINI_3_FLASH = "google/gemini-3-flash"
+    GEMINI_3_PRO_PREVIEW = "google/gemini-3-pro-preview"
     CLAUDE_SONNET_45 = "anthropic/claude-sonnet-4.5"
+    MINIMAX_M2 = "minimax/minimax-m2"
+    KIMI_K2_THINKING = "moonshotai/kimi-k2-thinking"
     QWEN3_8B = "qwen/qwen3-8b"
 
 
@@ -118,9 +121,10 @@ class MobileRunClient:
         max_steps: int = 15,
         vision: bool = True,
         reasoning: bool = False,
+        llm_model: Optional[str] = None,
     ) -> Task:
         """
-        Execute a natural language command on a device (legacy format).
+        Execute a natural language command on a device.
 
         Args:
             device_id: Target device ID
@@ -128,6 +132,7 @@ class MobileRunClient:
             max_steps: Maximum execution steps
             vision: Enable vision mode (screenshots)
             reasoning: Enable reasoning mode (planning)
+            llm_model: LLM model to use (optional)
 
         Returns:
             Task object with execution result
@@ -136,14 +141,30 @@ class MobileRunClient:
 
         payload = {
             "deviceId": device_id,
-            "command": command,
+            "task": command,
             "maxSteps": max_steps,
             "vision": vision,
             "reasoning": reasoning,
         }
+        
+        if llm_model:
+            payload["llmModel"] = llm_model
 
-        data = await self._request("POST", "/tasks/", json=payload, timeout=300.0)
-        return Task(**data)
+        data = await self._request("POST", "/v1/tasks/", json=payload, timeout=300.0)
+        
+        # The v1 API returns {"id": "...", "streamUrl": "...", "token": "..."}
+        # Convert this to a Task object for compatibility
+        task = Task(
+            taskId=data.get("id"),
+            deviceId=device_id,
+            command=command,
+            status=TaskStatusEnum.PENDING,
+        )
+        
+        # Store the stream URL for potential streaming
+        task.stream_url = data.get("streamUrl")
+        
+        return task
 
     async def run_task_v2(
         self,
@@ -204,6 +225,7 @@ class MobileRunClient:
         max_steps: int = 15,
         vision: bool = True,
         reasoning: bool = False,
+        llm_model: Optional[str] = None,
     ) -> AsyncIterator[dict]:
         """
         Execute a command with streaming updates.
@@ -212,13 +234,16 @@ class MobileRunClient:
         """
         payload = {
             "deviceId": device_id,
-            "command": command,
+            "task": command,
             "maxSteps": max_steps,
             "vision": vision,
             "reasoning": reasoning,
         }
+        
+        if llm_model:
+            payload["llmModel"] = llm_model
 
-        url = f"{self.base_url}/tasks/stream"
+        url = f"{self.base_url}/v1/tasks/stream"
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream(
