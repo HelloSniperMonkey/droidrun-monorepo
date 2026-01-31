@@ -80,8 +80,75 @@ export const ChatArea = ({
 
     try {
       const uploadedFilename = attached[0]?.uploadedFilename;
-      const res = await api.chat(userMessage.content, uploadedFilename, llmModel, mode);
-      replaceLastAssistantMessage(res.response || "Done.", res.steps);
+      
+      // Use the direct cloud endpoint when in cloud mode to avoid Google GenAI client issues
+      if (mode === "cloud") {
+        // Start the task (returns immediately with task_id)
+        const res = await api.chatCloud(userMessage.content, llmModel);
+        
+        if (!res.success || !res.task_id) {
+          replaceLastAssistantMessage(res.error || res.message || "Cloud task failed to start");
+          return;
+        }
+
+        const taskId = res.task_id;
+        replaceLastAssistantMessage(`🚀 Task started... Waiting for steps...`, []);
+
+        // Poll for live step updates
+        let lastStepCount = 0;
+        const pollInterval = 1500; // 1.5 seconds
+        const maxPolls = 200; // Max ~5 minutes of polling
+        let pollCount = 0;
+
+        const poll = async (): Promise<void> => {
+          try {
+            const statusRes = await api.chatCloudTasks(taskId);
+            
+            // Convert cloud steps to the expected format
+            const formattedSteps = statusRes.steps?.map((step) => ({
+              step_number: step.step_number,
+              total_steps: statusRes.total_steps || statusRes.steps.length,
+              description: step.description || step.event,
+              action: step.action,
+            })) || [];
+
+            // Update UI with current steps
+            if (formattedSteps.length > lastStepCount || statusRes.status !== "running") {
+              lastStepCount = formattedSteps.length;
+              const statusEmoji = statusRes.status === "completed" ? "✅" : 
+                                  statusRes.status === "failed" ? "❌" : "🔄";
+              const statusMessage = statusRes.final_answer || 
+                                    `${statusEmoji} ${statusRes.status}... (${formattedSteps.length} steps)`;
+              replaceLastAssistantMessage(statusMessage, formattedSteps);
+            }
+
+            // Check if task is complete
+            if (statusRes.status === "completed" || statusRes.status === "failed" || statusRes.status === "cancelled") {
+              const finalMessage = statusRes.final_answer || 
+                                   (statusRes.status === "completed" ? "Task completed successfully!" : 
+                                    statusRes.status === "failed" ? "Task failed." : "Task cancelled.");
+              replaceLastAssistantMessage(finalMessage, formattedSteps);
+              return; // Stop polling
+            }
+
+            // Continue polling
+            pollCount++;
+            if (pollCount < maxPolls) {
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+              return poll();
+            } else {
+              replaceLastAssistantMessage("⚠️ Polling timeout reached. Task may still be running.", formattedSteps);
+            }
+          } catch (pollError: any) {
+            replaceLastAssistantMessage(`Polling error: ${pollError?.message || "Unknown error"}`, []);
+          }
+        };
+
+        await poll();
+      } else {
+        const res = await api.chat(userMessage.content, uploadedFilename, llmModel, mode);
+        replaceLastAssistantMessage(res.response || "Done.", res.steps);
+      }
     } catch (err: any) {
       replaceLastAssistantMessage(err?.message || "Failed to get response");
     } finally {
