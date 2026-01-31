@@ -1,0 +1,661 @@
+# Iron Claw MCP Skill Manifest
+# Model Context Protocol (MCP) formatted skill for OpenClaw/ClawdBot integration
+# Version: 1.0.0
+# Last Updated: 2026-01-31
+
+name: ironclaw
+displayName: "Iron Claw - Mobile Automation Agent"
+version: "1.0.0"
+description: |
+  Iron Claw is a Mobile-First Autonomous Agent that orchestrates Android device 
+  automation, job hunting, productivity tasks, and tab management through a 
+  sophisticated FastAPI gateway. It provides AI-powered control of Android devices
+  via MobileRun cloud API or local ADB connection.
+
+author: "Iron Claw Team"
+license: "Proprietary"
+repository: "https://github.com/your-org/ironclaw"
+
+# Authentication
+auth:
+  type: bearer
+  header: "Authorization"
+  prefix: "Bearer"
+  envVar: "IRONCLAW_WEBHOOK_TOKEN"
+  # Token value: ubuntu@clawdbot (set in .env)
+
+# Base URL Configuration
+# Use Cloudflare tunnel URL for cloud access, or localhost for local testing
+baseUrl:
+  production: "${IRONCLAW_BASE_URL}"  # e.g., https://your-tunnel.trycloudflare.com
+  development: "http://localhost:8000"
+
+# Health Check
+healthCheck:
+  endpoint: "/health"
+  method: "GET"
+  expectedStatus: 200
+
+# Tool Definitions (MCP Format)
+tools:
+  # ============================================================================
+  # CORE WEBHOOK TOOL (Main Entry Point)
+  # ============================================================================
+  - name: "ironclaw_execute"
+    description: |
+      Execute a step on the Iron Claw Android automation agent.
+      This is the main entry point for all automation tasks.
+      Supports: chat commands, mobile actions, HTTP actions, scripts, clicks, and extraction.
+    inputSchema:
+      type: object
+      required: ["taskId", "type", "payload"]
+      properties:
+        taskId:
+          type: string
+          description: "Unique identifier for this task (use UUID or descriptive ID)"
+        type:
+          type: string
+          enum: ["execute-step", "query-status", "cancel-task"]
+          description: "Type of operation to perform"
+        payload:
+          type: object
+          required: ["stepType"]
+          properties:
+            stepType:
+              type: string
+              enum: ["log", "mobile_action", "http_action", "script", "click", "extract"]
+              description: "Type of step to execute"
+            params:
+              type: object
+              description: "Parameters specific to the step type"
+        metadata:
+          type: object
+          properties:
+            source:
+              type: string
+              default: "openclaw"
+            session_id:
+              type: string
+            correlation_id:
+              type: string
+    endpoint: "/openclaw/webhook"
+    method: "POST"
+    responseType: "async"
+    returns:
+      ok: boolean
+      runId: string
+      status: string
+      message: string
+
+  # ============================================================================
+  # CHAT & AI COMMANDS
+  # ============================================================================
+  - name: "ironclaw_chat"
+    description: |
+      Send a natural language command to Iron Claw AI agent.
+      The AI will interpret the command and execute appropriate actions on the Android device.
+      Examples: "Open Chrome and search for restaurants", "Set an alarm for 7am", "Close all tabs"
+    inputSchema:
+      type: object
+      required: ["message"]
+      properties:
+        message:
+          type: string
+          description: "Natural language command for the AI agent"
+        thread_id:
+          type: string
+          description: "Optional thread ID for conversation context"
+        image_base64:
+          type: string
+          description: "Optional base64-encoded image for visual context"
+    endpoint: "/api/chat"
+    method: "POST"
+    returns:
+      response: string
+      steps: array
+      success: boolean
+
+  - name: "ironclaw_cloud_execute"
+    description: |
+      Execute a task on MobileRun cloud agent with live step-by-step updates.
+      This is the RECOMMENDED method for cloud automation as it provides:
+      - Real-time progress tracking
+      - Direct MobileRun API access
+      - Async execution with polling
+      - Automatic device selection
+      Returns a task_id that you MUST poll using ironclaw_cloud_poll.
+    inputSchema:
+      type: object
+      required: ["message"]
+      properties:
+        message:
+          type: string
+          description: "Natural language command for the cloud agent"
+        device_id:
+          type: string
+          description: "Optional MobileRun device ID (auto-selects if omitted)"
+        llm_model:
+          type: string
+          default: "google/gemini-2.5-flash"
+          description: "LLM model to use (gemini-2.5-flash, claude-3.5-sonnet, gpt-4o)"
+        max_steps:
+          type: integer
+          default: 100
+          description: "Maximum steps before timeout"
+        vision:
+          type: boolean
+          default: true
+          description: "Enable vision/screenshot analysis"
+        reasoning:
+          type: boolean
+          default: true
+          description: "Enable chain-of-thought reasoning"
+        temperature:
+          type: number
+          default: 0.5
+          description: "LLM temperature (0.0-1.0)"
+    endpoint: "/chat-cloud"
+    method: "POST"
+    responseType: "async"
+    returns:
+      success: boolean
+      task_id: string
+      stream_url: string
+      message: string
+      status: string
+
+  - name: "ironclaw_cloud_poll"
+    description: |
+      Poll the status of a cloud task and get live step updates.
+      Use this repeatedly (every 1-2 seconds) until status is 'completed', 'failed', or 'cancelled'.
+      Returns current status, all steps completed so far, and final answer when done.
+    inputSchema:
+      type: object
+      required: ["task_id"]
+      properties:
+        task_id:
+          type: string
+          description: "Task ID from ironclaw_cloud_execute"
+    endpoint: "/chat-cloud/tasks/{task_id}"
+    method: "GET"
+    returns:
+      task_id: string
+      status: string
+      steps: array
+      total_steps: integer
+      final_answer: string
+      success: boolean
+      error: string
+
+  - name: "ironclaw_cloud_devices"
+    description: "List all available MobileRun cloud devices and their states"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/chat-cloud/devices"
+    method: "GET"
+    returns:
+      items: array
+
+  # ============================================================================
+  # TAB MANAGEMENT
+  # ============================================================================
+  - name: "ironclaw_tabs_list"
+    description: "Get list of all currently open Chrome tabs on the Android device"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/tabs/list"
+    method: "GET"
+    returns:
+      tabs: array
+      count: integer
+
+  - name: "ironclaw_tabs_organize"
+    description: |
+      Organize Chrome tabs into AI-determined groups.
+      Categories: Work, Social Media, Shopping, Research, Entertainment
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/tabs/organize"
+    method: "POST"
+    responseType: "async"
+    returns:
+      task_id: string
+      status: string
+
+  - name: "ironclaw_tabs_close_old"
+    description: "Close old/stale Chrome tabs that haven't been accessed recently"
+    inputSchema:
+      type: object
+      properties:
+        days_old:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 7
+          description: "Close tabs older than this many days"
+    endpoint: "/api/v1/tabs/close-old"
+    method: "POST"
+    returns:
+      task_id: string
+      status: string
+
+  - name: "ironclaw_tabs_merge_duplicates"
+    description: "Find and close duplicate Chrome tabs with the same URL"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/tabs/merge-duplicates"
+    method: "POST"
+    returns:
+      task_id: string
+      status: string
+
+  - name: "ironclaw_tabs_save_session"
+    description: "Save current Chrome tabs as a named session for later restoration"
+    inputSchema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Optional name for the session"
+    endpoint: "/api/v1/tabs/save-session"
+    method: "POST"
+    returns:
+      session_id: string
+      tab_count: integer
+
+  - name: "ironclaw_tabs_restore_session"
+    description: "Restore a previously saved tab session"
+    inputSchema:
+      type: object
+      required: ["session_id"]
+      properties:
+        session_id:
+          type: string
+          description: "ID of the session to restore"
+    endpoint: "/api/v1/tabs/restore-session"
+    method: "POST"
+    returns:
+      success: boolean
+      tabs_restored: integer
+
+  - name: "ironclaw_tabs_sessions"
+    description: "List all saved tab sessions"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/tabs/sessions"
+    method: "GET"
+    returns:
+      sessions: array
+
+  # ============================================================================
+  # ALARM & CALENDAR (Temporal Guardian)
+  # ============================================================================
+  - name: "ironclaw_alarm_set"
+    description: "Set an alarm on the Android device"
+    inputSchema:
+      type: object
+      required: ["hour", "minute"]
+      properties:
+        hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+          description: "Hour in 24-hour format (0-23)"
+        minute:
+          type: integer
+          minimum: 0
+          maximum: 59
+          description: "Minute (0-59)"
+        label:
+          type: string
+          description: "Optional label for the alarm"
+        days:
+          type: array
+          items:
+            type: string
+            enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          description: "Optional recurring days"
+    endpoint: "/api/v1/alarms/set"
+    method: "POST"
+    returns:
+      success: boolean
+      message: string
+
+  - name: "ironclaw_alarm_cancel"
+    description: "Cancel pending alarms (opens clock app for selection)"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/alarms/cancel"
+    method: "DELETE"
+    returns:
+      success: boolean
+
+  - name: "ironclaw_calendar_event"
+    description: "Create a calendar event on the Android device"
+    inputSchema:
+      type: object
+      required: ["title", "start_time"]
+      properties:
+        title:
+          type: string
+          description: "Event title"
+        start_time:
+          type: string
+          format: "date-time"
+          description: "Event start time (ISO 8601)"
+        end_time:
+          type: string
+          format: "date-time"
+          description: "Optional event end time"
+        description:
+          type: string
+          description: "Optional event description"
+    endpoint: "/api/v1/alarms/calendar/event"
+    method: "POST"
+    returns:
+      success: boolean
+
+  - name: "ironclaw_time"
+    description: "Get current time from the Android device"
+    inputSchema:
+      type: object
+      properties: {}
+    endpoint: "/api/v1/alarms/time"
+    method: "GET"
+    returns:
+      time: string
+      timezone: string
+
+  # ============================================================================
+  # JOB HUNTER
+  # ============================================================================
+  - name: "ironclaw_jobs_upload_resume"
+    description: |
+      Upload and parse a resume PDF for job applications.
+      Extracts structured data (skills, experience, education) for automation.
+    inputSchema:
+      type: object
+      required: ["file"]
+      properties:
+        file:
+          type: string
+          format: "binary"
+          description: "Resume PDF file (max 16MB)"
+    endpoint: "/api/v1/jobs/upload-resume"
+    method: "POST"
+    contentType: "multipart/form-data"
+    returns:
+      success: boolean
+      resume_data: object
+
+  - name: "ironclaw_jobs_search_apply"
+    description: |
+      Start automated job search and application workflow.
+      Uses AI to search and apply to jobs matching the query.
+    inputSchema:
+      type: object
+      required: ["query"]
+      properties:
+        query:
+          type: string
+          description: "Job search query (e.g., 'Python developer in San Francisco')"
+        max_applications:
+          type: integer
+          default: 5
+          description: "Maximum number of applications to submit"
+        filters:
+          type: object
+          properties:
+            experience_level:
+              type: string
+              enum: ["entry", "mid", "senior"]
+            job_type:
+              type: string
+              enum: ["full-time", "part-time", "contract", "remote"]
+    endpoint: "/api/v1/jobs/search-and-apply"
+    method: "POST"
+    responseType: "async"
+    returns:
+      task_id: string
+      status: string
+
+  - name: "ironclaw_jobs_status"
+    description: "Get status of a job search task"
+    inputSchema:
+      type: object
+      required: ["task_id"]
+      properties:
+        task_id:
+          type: string
+    endpoint: "/api/v1/jobs/status/{task_id}"
+    method: "GET"
+    returns:
+      status: string
+      applications_submitted: integer
+      errors: array
+
+  # ============================================================================
+  # HUMAN-IN-THE-LOOP (HITL)
+  # ============================================================================
+  - name: "ironclaw_hitl_pending"
+    description: "Get all pending HITL intervention requests (CAPTCHAs, logins, etc.)"
+    inputSchema:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: "Optional filter by task ID"
+    endpoint: "/api/v1/hitl/pending"
+    method: "GET"
+    returns:
+      requests: array
+      count: integer
+
+  - name: "ironclaw_hitl_get"
+    description: "Get details of a specific HITL request"
+    inputSchema:
+      type: object
+      required: ["request_id"]
+      properties:
+        request_id:
+          type: string
+    endpoint: "/api/v1/hitl/{request_id}"
+    method: "GET"
+    returns:
+      request_id: string
+      message: string
+      options: array
+      screenshot: string
+      status: string
+
+  - name: "ironclaw_hitl_respond"
+    description: "Respond to a HITL intervention request"
+    inputSchema:
+      type: object
+      required: ["request_id", "action"]
+      properties:
+        request_id:
+          type: string
+        action:
+          type: string
+          enum: ["Retry", "Abort", "I solved it"]
+          description: "Action to take"
+        custom_input:
+          type: string
+          description: "Optional custom input for the action"
+    endpoint: "/api/v1/hitl/{request_id}/respond"
+    method: "POST"
+    returns:
+      success: boolean
+
+  # ============================================================================
+  # SPEECH & TRANSCRIPTION
+  # ============================================================================
+  - name: "ironclaw_transcribe"
+    description: "Transcribe audio to text using Gemini AI"
+    inputSchema:
+      type: object
+      required: ["audio"]
+      properties:
+        audio:
+          type: string
+          format: "binary"
+          description: "Audio file (webm, wav, mp3)"
+    endpoint: "/api/transcribe"
+    method: "POST"
+    contentType: "multipart/form-data"
+    returns:
+      text: string
+      confidence: number
+
+  # ============================================================================
+  # TASK MANAGEMENT
+  # ============================================================================
+  - name: "ironclaw_tasks_list"
+    description: "List all OpenClaw tasks and their statuses"
+    inputSchema:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["pending", "queued", "running", "completed", "failed", "cancelled"]
+          description: "Optional filter by status"
+        limit:
+          type: integer
+          default: 50
+    endpoint: "/openclaw/tasks"
+    method: "GET"
+    returns:
+      ok: boolean
+      tasks: array
+      total: integer
+
+  - name: "ironclaw_task_status"
+    description: "Get status of a specific task by run ID"
+    inputSchema:
+      type: object
+      required: ["run_id"]
+      properties:
+        run_id:
+          type: string
+    endpoint: "/openclaw/tasks/{run_id}"
+    method: "GET"
+    returns:
+      ok: boolean
+      task: object
+
+  - name: "ironclaw_task_cancel"
+    description: "Cancel a pending or running task"
+    inputSchema:
+      type: object
+      required: ["run_id"]
+      properties:
+        run_id:
+          type: string
+    endpoint: "/openclaw/tasks/{run_id}"
+    method: "DELETE"
+    returns:
+      ok: boolean
+      message: string
+
+# Resources (read-only data endpoints)
+resources:
+  - name: "health"
+    description: "Service health and status"
+    endpoint: "/health"
+    mimeType: "application/json"
+
+  - name: "tabs"
+    description: "Current Chrome tabs on device"
+    endpoint: "/api/v1/tabs/list"
+    mimeType: "application/json"
+
+  - name: "sessions"
+    description: "Saved tab sessions"
+    endpoint: "/api/v1/tabs/sessions"
+    mimeType: "application/json"
+
+  - name: "hitl_pending"
+    description: "Pending HITL intervention requests"
+    endpoint: "/api/v1/hitl/pending"
+    mimeType: "application/json"
+
+# Prompts (pre-built conversation starters)
+prompts:
+  - name: "open_app"
+    description: "Open an app on the Android device"
+    template: "Open the {{app_name}} app on my phone"
+    variables:
+      - name: "app_name"
+        description: "Name of the app to open"
+        required: true
+
+  - name: "search_web"
+    description: "Search the web using Chrome"
+    template: "Search for '{{query}}' in Chrome"
+    variables:
+      - name: "query"
+        description: "Search query"
+        required: true
+
+  - name: "set_alarm"
+    description: "Set an alarm"
+    template: "Set an alarm for {{time}} with label '{{label}}'"
+    variables:
+      - name: "time"
+        description: "Time in HH:MM format"
+        required: true
+      - name: "label"
+        description: "Alarm label"
+        required: false
+
+  - name: "organize_tabs"
+    description: "Organize Chrome tabs"
+    template: "Organize my Chrome tabs into categories"
+
+  - name: "job_search"
+    description: "Start job search"
+    template: "Search for {{job_type}} jobs in {{location}} and apply to up to {{count}} positions"
+    variables:
+      - name: "job_type"
+        description: "Type of job"
+        required: true
+      - name: "location"
+        description: "Job location"
+        required: true
+      - name: "count"
+        description: "Max applications"
+        required: false
+        default: "5"
+
+# Capabilities summary
+capabilities:
+  android_control: true
+  web_automation: true
+  job_hunting: true
+  tab_management: true
+  alarm_calendar: true
+  speech_to_text: true
+  human_in_loop: true
+  voice_calls: false  # Vapi not supported in this region
+
+# Rate Limits
+rateLimits:
+  requestsPerMinute: 60
+  requestsPerHour: 500
+  concurrentTasks: 5
+
+# Disabled Features
+disabled:
+  - name: "voice_calls"
+    reason: "Vapi voice calls not supported in this region"
+    affectedEndpoints:
+      - "/api/v1/wake/call-now"
+      - "/api/v1/wake/schedule"
+      - "/api/schedule-call"

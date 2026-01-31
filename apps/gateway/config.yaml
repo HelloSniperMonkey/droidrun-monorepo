@@ -39,3 +39,16 @@ job_hunter:
 tab_manager:
   max_tabs_to_close: 10  # Maximum tabs to close in one cleanup session
   default_days_old: 7    # Default age for closing old tabs
+
+# === OpenClaw Integration Settings ===
+openclaw:
+  enabled: true
+  # Token is set via OPENCLAW_HOOK_TOKEN env var (do not store secrets here!)
+  # Rate limiting
+  rate_limit:
+    requests_per_minute: 60
+    burst: 10
+  # Logging
+  log_payloads: true  # Log incoming webhook payloads (disable in production for privacy)
+  # Callback URL for reporting results back to OpenClaw (optional)
+  # callback_url: "https://api.snipermonkey.in/hooks/agent"

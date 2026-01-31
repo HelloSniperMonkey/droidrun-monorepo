@@ -1,0 +1,99 @@
+# OpenClaw Skill: Iron Claw Webhook Integration
+# This skill enables OpenClaw agents to execute tasks on Iron Claw
+
+name: ironclaw-webhook
+version: 1.0.0
+description: |
+  Skill for calling Iron Claw webhook endpoints to execute mobile automation tasks,
+  query task status, and cancel running tasks.
+
+author: IronClaw Team
+tags:
+  - webhook
+  - mobile-automation
+  - ironclaw
+  - integration
+
+# Configuration (set via environment or config file)
+config:
+  ironclaw_url:
+    description: "Base URL for Iron Claw webhook endpoint"
+    type: string
+    required: true
+    default: "https://pack-nickel-occasionally-tube.trycloudflare.com"
+  
+  hook_token:
+    description: "Bearer token for authenticating with Iron Claw"
+    type: string
+    required: true
+    secret: true
+    env_var: OPENCLAW_HOOK_TOKEN
+
+# Actions this skill provides
+actions:
+  run-step:
+    description: "Execute a step/task on Iron Claw"
+    parameters:
+      task_id:
+        type: string
+        required: true
+        description: "Unique identifier for the task"
+      step_type:
+        type: string
+        required: true
+        enum: [log, http_action, click, extract, mobile_action, script]
+        description: "Type of step to execute"
+      params:
+        type: object
+        required: false
+        description: "Parameters for the step execution"
+    returns:
+      run_id:
+        type: string
+        description: "Unique run ID for tracking the task"
+      status:
+        type: string
+        description: "Current status of the task"
+
+  query-status:
+    description: "Query the status of a running task"
+    parameters:
+      run_id:
+        type: string
+        required: true
+        description: "Run ID returned from run-step action"
+    returns:
+      status:
+        type: string
+        enum: [pending, queued, running, completed, failed, cancelled]
+      result:
+        type: object
+        description: "Result data if task is completed"
+      error:
+        type: string
+        description: "Error message if task failed"
+
+  cancel-task:
+    description: "Cancel a pending or running task"
+    parameters:
+      run_id:
+        type: string
+        required: true
+        description: "Run ID of the task to cancel"
+    returns:
+      success:
+        type: boolean
+      message:
+        type: string
+
+# Hooks configuration for OpenClaw
+hooks:
+  mappings:
+    - source: "openclaw->ironclaw"
+      target: "run-step"
+      transform:
+        taskId: "{{ session.key }}"
+        type: "execute-step"
+        payload:
+          stepType: "{{ action.type }}"
+          params: "{{ action.params }}"
