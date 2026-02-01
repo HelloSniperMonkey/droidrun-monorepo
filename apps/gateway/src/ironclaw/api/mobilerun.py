@@ -182,3 +182,18 @@ async def get_device(device_id: str):
             status_code=502,
             detail=f"Failed to connect to MobileRun API: {str(e)}"
         )
+
+
+@router.get("/physical-device")
+async def get_physical_device():
+    """
+    Get the configured physical device ID from environment variables.
+    Returns the device_id if configured, otherwise returns null.
+    """
+    settings = get_settings()
+    device_id = settings.mobilerun_device_id
+    
+    if not device_id:
+        return {"device_id": None}
+    
+    return {"device_id": device_id}

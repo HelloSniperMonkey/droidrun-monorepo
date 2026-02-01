@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     
     # MobileRun
     mobilerun_api_key: str = Field(default="", description="MobileRun cloud API key")
+    mobilerun_device_id: Optional[str] = Field(default=None, description="MobileRun physical device ID")
 
     # Vapi
     vapi_api_key: str = Field(default="", description="Vapi API key")
@@ -49,6 +50,10 @@ class Settings(BaseSettings):
 
     # User
     user_phone_number: str = Field(default="", description="User's phone number for wake-up calls")
+
+    # Google Sheets
+    google_sheets_credentials_file: Optional[str] = Field(default=None, description="Path to Google Sheets service account credentials JSON")
+    google_sheets_spreadsheet_id: Optional[str] = Field(default=None, description="Google Sheets spreadsheet ID")
 
     # Server
     host: str = Field(default="0.0.0.0")

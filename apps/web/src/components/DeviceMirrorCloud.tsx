@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobileRunDevices, MobileRunDevice } from "@/hooks/useMobileRunDevices";
+import { useDevice } from "@/contexts/DeviceContext";
 
 interface DeviceInfo {
     width: number;
@@ -55,9 +56,10 @@ export const DeviceMirrorCloud = () => {
         loading: devicesLoading,
         error: devicesError,
         refresh: refreshDevices,
-        selectedDevice,
-        setSelectedDevice
     } = useMobileRunDevices();
+
+    // Use shared device context
+    const { selectedDevice, setSelectedDevice } = useDevice();
 
     // ==========================================================================
     // WebRTC Stats
@@ -640,10 +642,14 @@ export const DeviceMirrorCloud = () => {
                         <div className="flex items-center gap-3">
                             <div className={cn(
                                 "w-2 h-2 rounded-full",
+                                selectedDevice?.isPhysical ? "bg-purple-500" :
                                 selectedDevice?.state === 'ready' ? "bg-emerald-500" :
                                     selectedDevice?.state === 'assigned' ? "bg-yellow-500" : "bg-white/20"
                             )} />
-                            <span className="text-xs font-bold text-white/80">
+                            <span className={cn(
+                                "text-xs font-bold",
+                                selectedDevice?.isPhysical ? "text-purple-300" : "text-white/80"
+                            )}>
                                 {selectedDevice?.name || 'Select a device...'}
                             </span>
                         </div>
@@ -676,17 +682,24 @@ export const DeviceMirrorCloud = () => {
                                         }}
                                         className={cn(
                                             "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors",
-                                            selectedDevice?.id === device.id && "bg-cyan-500/10"
+                                            selectedDevice?.id === device.id && "bg-cyan-500/10",
+                                            device.isPhysical && "border-b border-white/5 bg-gradient-to-r from-purple-500/5 to-pink-500/5"
                                         )}
                                     >
                                         <div className={cn(
                                             "w-2 h-2 rounded-full",
+                                            device.isPhysical ? "bg-purple-500" :
                                             device.state === 'ready' ? "bg-emerald-500" :
                                                 device.state === 'assigned' ? "bg-yellow-500" : "bg-white/20"
                                         )} />
                                         <div className="flex-1 text-left">
-                                            <p className="text-xs font-bold text-white/80">{device.name || device.id.slice(0, 8)}</p>
-                                            <p className="text-[10px] text-white/40">{device.state} • {device.deviceType || 'unknown'}</p>
+                                            <p className={cn(
+                                                "text-xs font-bold",
+                                                device.isPhysical ? "text-purple-300" : "text-white/80"
+                                            )}>{device.name || device.id.slice(0, 8)}</p>
+                                            <p className="text-[10px] text-white/40">
+                                                {device.isPhysical ? "Physical Device" : `${device.state} • ${device.deviceType || 'unknown'}`}
+                                            </p>
                                         </div>
                                     </button>
                                 ))

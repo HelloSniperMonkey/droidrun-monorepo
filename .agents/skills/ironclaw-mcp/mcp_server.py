@@ -381,6 +381,82 @@ class IronClawMCPServer:
                 endpoint="/openclaw/tasks/{run_id}",
                 method="DELETE",
             ),
+            
+            # Google Sheets
+            MCPToolDefinition(
+                name="ironclaw_sheets_append",
+                description="Append a job application entry to the Google Sheet. Use this after applying to a job to track the application.",
+                inputSchema={
+                    "type": "object",
+                    "required": ["entry"],
+                    "properties": {
+                        "entry": {
+                            "type": "object",
+                            "required": ["company", "job_title"],
+                            "properties": {
+                                "company": {"type": "string", "description": "Company name"},
+                                "job_title": {"type": "string", "description": "Job title/position"},
+                                "apply_link": {"type": "string", "description": "URL to job posting"},
+                                "date_applied": {"type": "string", "description": "Date applied (YYYY-MM-DD)"},
+                                "deadline": {"type": "string", "description": "Application deadline"},
+                                "salary": {"type": "string", "description": "Salary information"},
+                                "job_type": {"type": "string", "description": "Job type (Full-time, Part-time, etc.)"},
+                                "contact": {"type": "string", "description": "Contact person info"},
+                                "location": {"type": "string", "description": "Job location"},
+                                "status": {"type": "string", "description": "Status (Applied, Interview, etc.)", "default": "Applied"}
+                            }
+                        }
+                    }
+                },
+                endpoint="/api/v1/sheets/append",
+                method="POST",
+            ),
+            MCPToolDefinition(
+                name="ironclaw_sheets_bulk_append",
+                description="Append multiple job application entries to the Google Sheet at once.",
+                inputSchema={
+                    "type": "object",
+                    "required": ["entries"],
+                    "properties": {
+                        "entries": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["company", "job_title"],
+                                "properties": {
+                                    "company": {"type": "string"},
+                                    "job_title": {"type": "string"},
+                                    "apply_link": {"type": "string"},
+                                    "date_applied": {"type": "string"},
+                                    "deadline": {"type": "string"},
+                                    "salary": {"type": "string"},
+                                    "job_type": {"type": "string"},
+                                    "contact": {"type": "string"},
+                                    "location": {"type": "string"},
+                                    "status": {"type": "string", "default": "Applied"}
+                                }
+                            },
+                            "description": "Array of job application entries"
+                        }
+                    }
+                },
+                endpoint="/api/v1/sheets/bulk-append",
+                method="POST",
+            ),
+            MCPToolDefinition(
+                name="ironclaw_sheets_get_applications",
+                description="Get all job applications from the Google Sheet.",
+                inputSchema={"type": "object", "properties": {}},
+                endpoint="/api/v1/sheets/applications",
+                method="GET",
+            ),
+            MCPToolDefinition(
+                name="ironclaw_sheets_url",
+                description="Get the URL of the Google Sheet for viewing.",
+                inputSchema={"type": "object", "properties": {}},
+                endpoint="/api/v1/sheets/url",
+                method="GET",
+            ),
         ]
     
     def _define_resources(self) -> list[MCPResourceDefinition]:

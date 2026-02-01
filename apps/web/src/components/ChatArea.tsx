@@ -4,6 +4,7 @@ import { CategoryPills } from "./CategoryPills";
 import { EndpointActions, type EndpointAction } from "./EndpointActions";
 import { api } from "@/lib/api";
 import { useAttachments } from "@/hooks/useAttachments";
+import { useDevice } from "@/contexts/DeviceContext";
 import { Plus, Box } from "lucide-react";
 import type { ChatAttachment, ChatMessage, ChatThread, StepInfo } from "@/types/chat";
 
@@ -28,6 +29,7 @@ export const ChatArea = ({
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [llmModel, setLlmModel] = useState("google/gemini-2.5-flash");
   const { attachments, addFiles, removeAttachment, reset } = useAttachments();
+  const { selectedDevice } = useDevice();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +86,9 @@ export const ChatArea = ({
       // Use the direct cloud endpoint when in cloud mode to avoid Google GenAI client issues
       if (mode === "cloud") {
         // Start the task (returns immediately with task_id)
-        const res = await api.chatCloud(userMessage.content, llmModel);
+        const res = await api.chatCloud(userMessage.content, llmModel, {
+          deviceId: selectedDevice?.id,
+        });
         
         if (!res.success || !res.task_id) {
           replaceLastAssistantMessage(res.error || res.message || "Cloud task failed to start");

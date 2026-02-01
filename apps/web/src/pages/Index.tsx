@@ -5,6 +5,7 @@ import { DeviceMirrorWebRTC } from "@/components/DeviceMirrorWebRTC";
 import { DeviceMirrorCloud } from "@/components/DeviceMirrorCloud";
 import { SnowAnimation } from "@/components/SnowAnimation";
 import { useLocalThreads } from "@/hooks/useLocalThreads";
+import { DeviceProvider } from "@/contexts/DeviceContext";
 import { Smartphone, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -49,9 +50,10 @@ const Index = () => {
   }, [startNewThread]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <SnowAnimation isActive={showSnow} />
-      <Sidebar
+    <DeviceProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <SnowAnimation isActive={showSnow} />
+        <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         threads={threads}
@@ -122,6 +124,7 @@ const Index = () => {
         )}
       </main>
     </div>
+    </DeviceProvider>
   );
 };
 
