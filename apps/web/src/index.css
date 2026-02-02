@@ -117,11 +117,20 @@
   }
 
   .mesh-gradient {
+    background-color: hsl(var(--background));
     background-image:
-      radial-gradient(at 0% 0%, hsla(327, 100%, 54%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(270, 100%, 64%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(190, 100%, 50%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(327, 100%, 54%, 0.12) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(327, 100%, 54%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(270, 100%, 64%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(190, 100%, 50%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(327, 100%, 54%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, hsla(280, 100%, 60%, 0.05) 0px, transparent 50%);
+    filter: blur(40px);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .text-glow {

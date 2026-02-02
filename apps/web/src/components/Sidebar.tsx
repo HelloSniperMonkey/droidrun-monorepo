@@ -113,22 +113,14 @@ export const Sidebar = ({
     <aside className="w-72 h-screen flex flex-col bg-card border-r border-border relative transition-all duration-300">
       {/* Header */}
       <div className="p-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 group cursor-pointer" onClick={onToggle}>
-          <div className="w-8 h-8 rounded-lg bg-brand-pink flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(255,46,144,0.3)]">
+        <div className="flex items-center gap-3 group cursor-pointer" onClick={onToggle}>
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-pink to-brand-purple flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(255,46,144,0.4)]">
             <PanelLeft className="h-4 w-4 text-white" />
           </div>
-          <h1 className="text-xl font-black tracking-tighter text-white uppercase">
-            Iron<span className="text-brand-pink">Claw</span>
+          <h1 className="text-xl font-black tracking-widest text-white uppercase drop-shadow-md">
+            Iron<span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-pink to-brand-purple">Claw</span>
           </h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="text-white/20 hover:text-white transition-colors"
-        >
-          <PanelLeftClose className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Action Buttons */}

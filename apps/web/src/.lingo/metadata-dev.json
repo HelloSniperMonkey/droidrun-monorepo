@@ -1,0 +1,1145 @@
+{
+  "entries": {
+    "44c54028205a": {
+      "type": "content",
+      "sourceText": "404",
+      "context": {
+        "componentName": "NotFound",
+        "filePath": "pages/NotFound.tsx"
+      },
+      "hash": "44c54028205a",
+      "location": {
+        "filePath": "pages/NotFound.tsx",
+        "line": 14,
+        "column": 8
+      }
+    },
+    "2925349d88e1": {
+      "type": "content",
+      "sourceText": "Oops! Page not found",
+      "context": {
+        "componentName": "NotFound",
+        "filePath": "pages/NotFound.tsx"
+      },
+      "hash": "2925349d88e1",
+      "location": {
+        "filePath": "pages/NotFound.tsx",
+        "line": 15,
+        "column": 8
+      }
+    },
+    "1aeb7cddd3a9": {
+      "type": "content",
+      "sourceText": "Return to Home",
+      "context": {
+        "componentName": "NotFound",
+        "filePath": "pages/NotFound.tsx"
+      },
+      "hash": "1aeb7cddd3a9",
+      "location": {
+        "filePath": "pages/NotFound.tsx",
+        "line": 16,
+        "column": 8
+      }
+    },
+    "618605070086": {
+      "type": "content",
+      "sourceText": "New chat",
+      "context": {
+        "componentName": "NewChatTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "618605070086",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 37,
+        "column": 27
+      }
+    },
+    "5868f905c6aa": {
+      "type": "content",
+      "sourceText": "List tabs",
+      "context": {
+        "componentName": "ListTabsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "5868f905c6aa",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 38,
+        "column": 28
+      }
+    },
+    "480370ae3b7a": {
+      "type": "content",
+      "sourceText": "Organize tabs",
+      "context": {
+        "componentName": "OrganizeTabsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "480370ae3b7a",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 39,
+        "column": 32
+      }
+    },
+    "b3afff1a7f5c": {
+      "type": "content",
+      "sourceText": "Close old tabs",
+      "context": {
+        "componentName": "CloseOldTabsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "b3afff1a7f5c",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 40,
+        "column": 32
+      }
+    },
+    "9273b6fada17": {
+      "type": "content",
+      "sourceText": "Merge duplicates",
+      "context": {
+        "componentName": "MergeDuplicatesTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "9273b6fada17",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 41,
+        "column": 35
+      }
+    },
+    "37587722075d": {
+      "type": "content",
+      "sourceText": "List tab sessions",
+      "context": {
+        "componentName": "ListTabSessionsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "37587722075d",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 42,
+        "column": 35
+      }
+    },
+    "8e61ac60a246": {
+      "type": "content",
+      "sourceText": "Job portals",
+      "context": {
+        "componentName": "JobPortalsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "8e61ac60a246",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 43,
+        "column": 30
+      }
+    },
+    "3a69eaf68540": {
+      "type": "content",
+      "sourceText": "Google Sheets apps",
+      "context": {
+        "componentName": "GoogleSheetsAppsTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "3a69eaf68540",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 44,
+        "column": 36
+      }
+    },
+    "ca6ffcb9f177": {
+      "type": "content",
+      "sourceText": "Gateway health",
+      "context": {
+        "componentName": "GatewayHealthTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "ca6ffcb9f177",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 45,
+        "column": 33
+      }
+    },
+    "0c00a0b2827f": {
+      "type": "content",
+      "sourceText": "Check Android version",
+      "context": {
+        "componentName": "CheckAndroidVersionTitle",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "0c00a0b2827f",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 46,
+        "column": 39
+      }
+    },
+    "38a6d552c65c": {
+      "type": "content",
+      "sourceText": "Iron<span0>Claw</span0>",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "38a6d552c65c",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 120,
+        "column": 10
+      }
+    },
+    "540500bed987": {
+      "type": "content",
+      "sourceText": "New Sequence",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "540500bed987",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 128,
+        "column": 8
+      }
+    },
+    "df9a58ddefdb": {
+      "type": "content",
+      "sourceText": "Hide UI",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "df9a58ddefdb",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 144,
+        "column": 23
+      }
+    },
+    "7b096bd0a043": {
+      "type": "content",
+      "sourceText": "Show UI",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "7b096bd0a043",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 144,
+        "column": 46
+      }
+    },
+    "7ada0812f172": {
+      "type": "attribute",
+      "sourceText": "Search...",
+      "context": {
+        "attributeName": "placeholder",
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "7ada0812f172",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 152,
+        "column": 10
+      }
+    },
+    "0092148b0040": {
+      "type": "content",
+      "sourceText": "Local",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "0092148b0040",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 165,
+        "column": 10
+      }
+    },
+    "2dfff639c733": {
+      "type": "content",
+      "sourceText": "Cloud",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "2dfff639c733",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 172,
+        "column": 10
+      }
+    },
+    "8290f03275aa": {
+      "type": "content",
+      "sourceText": "Memory Bank",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "8290f03275aa",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 185,
+        "column": 10
+      }
+    },
+    "ad9305f7f68c": {
+      "type": "content",
+      "sourceText": "Sector Empty",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "ad9305f7f68c",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 191,
+        "column": 14
+      }
+    },
+    "e44297eaa7d2": {
+      "type": "content",
+      "sourceText": "Stop Snow",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "e44297eaa7d2",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 267,
+        "column": 22
+      }
+    },
+    "520cfddbed80": {
+      "type": "content",
+      "sourceText": "Let it Snow",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "520cfddbed80",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 267,
+        "column": 47
+      }
+    },
+    "47cde6931905": {
+      "type": "content",
+      "sourceText": "Account Access",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "47cde6931905",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 281,
+        "column": 12
+      }
+    },
+    "792e2f391da5": {
+      "type": "content",
+      "sourceText": "Log in to sync session",
+      "context": {
+        "componentName": "Sidebar",
+        "filePath": "components/Sidebar.tsx"
+      },
+      "hash": "792e2f391da5",
+      "location": {
+        "filePath": "components/Sidebar.tsx",
+        "line": 282,
+        "column": 12
+      }
+    },
+    "aab9bc6be389": {
+      "type": "content",
+      "sourceText": "Select Language",
+      "context": {
+        "componentName": "LanguageSwitcher",
+        "filePath": "components/LanguageSwitcher.tsx"
+      },
+      "hash": "aab9bc6be389",
+      "location": {
+        "filePath": "components/LanguageSwitcher.tsx",
+        "line": 61,
+        "column": 8
+      }
+    },
+    "fe54cabbf8e2": {
+      "type": "content",
+      "sourceText": "Disconnected",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "fe54cabbf8e2",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 560,
+        "column": 40
+      }
+    },
+    "8532782df3de": {
+      "type": "content",
+      "sourceText": "Connecting...",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "8532782df3de",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 561,
+        "column": 38
+      }
+    },
+    "7476632b02a9": {
+      "type": "content",
+      "sourceText": "Establishing WebRTC...",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "7476632b02a9",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 562,
+        "column": 37
+      }
+    },
+    "5b7c705db857": {
+      "type": "content",
+      "sourceText": "WebRTC H.264 Stream",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "5b7c705db857",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 563,
+        "column": 37
+      }
+    },
+    "6c78cb45f2aa": {
+      "type": "content",
+      "sourceText": "Connection Failed",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "6c78cb45f2aa",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 564,
+        "column": 33
+      }
+    },
+    "7c7924d7831b": {
+      "type": "content",
+      "sourceText": "WebRTC Stream {expression0}",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "7c7924d7831b",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 583,
+        "column": 24
+      }
+    },
+    "d7a7d17f370e": {
+      "type": "content",
+      "sourceText": "{fps} FPS",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "d7a7d17f370e",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 593,
+        "column": 28
+      }
+    },
+    "db109f2adf7f": {
+      "type": "content",
+      "sourceText": "{latency}ms",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "db109f2adf7f",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 598,
+        "column": 28
+      }
+    },
+    "8670eabd5444": {
+      "type": "content",
+      "sourceText": "{bitrate} kbps",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "8670eabd5444",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 603,
+        "column": 28
+      }
+    },
+    "5e83a90b964a": {
+      "type": "content",
+      "sourceText": "Connecting to Server",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "5e83a90b964a",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 661,
+        "column": 85
+      }
+    },
+    "53a1267b30a8": {
+      "type": "content",
+      "sourceText": "Establishing WebRTC",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "53a1267b30a8",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 662,
+        "column": 84
+      }
+    },
+    "16ca0684ed90": {
+      "type": "content",
+      "sourceText": "Waiting for Device",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "16ca0684ed90",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 663,
+        "column": 140
+      }
+    },
+    "5373dffb5f5e": {
+      "type": "content",
+      "sourceText": "Stream Offline",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "5373dffb5f5e",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 664,
+        "column": 139
+      }
+    },
+    "0d62395e3fbb": {
+      "type": "content",
+      "sourceText": "Connect Portal app to ws://localhost:8082/device",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "0d62395e3fbb",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 667,
+        "column": 78
+      }
+    },
+    "51fbb90d5842": {
+      "type": "content",
+      "sourceText": "Click below to start",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "51fbb90d5842",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 667,
+        "column": 142
+      }
+    },
+    "3441935c99ce": {
+      "type": "content",
+      "sourceText": "Start Stream",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "3441935c99ce",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 672,
+        "column": 48
+      }
+    },
+    "3162a0d2df84": {
+      "type": "content",
+      "sourceText": "Connecting...",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "3162a0d2df84",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 684,
+        "column": 85
+      }
+    },
+    "49b6d38745c7": {
+      "type": "content",
+      "sourceText": "Negotiating...",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "49b6d38745c7",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 685,
+        "column": 84
+      }
+    },
+    "a3cb34fee3c2": {
+      "type": "content",
+      "sourceText": "Reconnect",
+      "context": {
+        "componentName": "DeviceMirrorWebRTC",
+        "filePath": "components/DeviceMirrorWebRTC.tsx"
+      },
+      "hash": "a3cb34fee3c2",
+      "location": {
+        "filePath": "components/DeviceMirrorWebRTC.tsx",
+        "line": 686,
+        "column": 120
+      }
+    },
+    "e324a50bbe6f": {
+      "type": "content",
+      "sourceText": "Disconnected",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "e324a50bbe6f",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 582,
+        "column": 40
+      }
+    },
+    "a8469d3356f9": {
+      "type": "content",
+      "sourceText": "Connecting to Cloud...",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "a8469d3356f9",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 583,
+        "column": 38
+      }
+    },
+    "dc85848f588d": {
+      "type": "content",
+      "sourceText": "Establishing WebRTC...",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "dc85848f588d",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 584,
+        "column": 37
+      }
+    },
+    "c52901cb6ecc": {
+      "type": "content",
+      "sourceText": "Cloud H.264 Stream",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "c52901cb6ecc",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 585,
+        "column": 37
+      }
+    },
+    "6565ba724a01": {
+      "type": "content",
+      "sourceText": "Connection Failed",
+      "context": {
+        "componentName": "renderConnectionText",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "6565ba724a01",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 586,
+        "column": 33
+      }
+    },
+    "109539fb5be5": {
+      "type": "content",
+      "sourceText": "<Cloud0></Cloud0> Cloud Stream {expression0}",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "109539fb5be5",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 605,
+        "column": 24
+      }
+    },
+    "099dc707ef7d": {
+      "type": "content",
+      "sourceText": "{fps} FPS",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "099dc707ef7d",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 616,
+        "column": 28
+      }
+    },
+    "aa7eb7d6953f": {
+      "type": "content",
+      "sourceText": "{latency}ms",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "aa7eb7d6953f",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 621,
+        "column": 28
+      }
+    },
+    "f132d1446a4f": {
+      "type": "content",
+      "sourceText": "{bitrate} kbps",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "f132d1446a4f",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 626,
+        "column": 28
+      }
+    },
+    "18cc350eb803": {
+      "type": "content",
+      "sourceText": "Loading devices...",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "18cc350eb803",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 670,
+        "column": 32
+      }
+    },
+    "01ba6422c46c": {
+      "type": "content",
+      "sourceText": "No devices found",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "01ba6422c46c",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 674,
+        "column": 32
+      }
+    },
+    "7ea37c03b0aa": {
+      "type": "content",
+      "sourceText": "Connecting to Cloud",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "7ea37c03b0aa",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 759,
+        "column": 85
+      }
+    },
+    "e108868c0489": {
+      "type": "content",
+      "sourceText": "Establishing WebRTC",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "e108868c0489",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 760,
+        "column": 84
+      }
+    },
+    "df9f81ed811f": {
+      "type": "content",
+      "sourceText": "Select a Device",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "df9f81ed811f",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 761,
+        "column": 139
+      }
+    },
+    "44708bf0fe5a": {
+      "type": "content",
+      "sourceText": "Stream Offline",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "44708bf0fe5a",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 762,
+        "column": 138
+      }
+    },
+    "f26bf56d3ca4": {
+      "type": "content",
+      "sourceText": "Choose a cloud device above",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "f26bf56d3ca4",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 765,
+        "column": 77
+      }
+    },
+    "ecbcefab59e3": {
+      "type": "content",
+      "sourceText": "Click below to reconnect",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "ecbcefab59e3",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 765,
+        "column": 120
+      }
+    },
+    "a268857018f1": {
+      "type": "content",
+      "sourceText": "Connect to Cloud",
+      "context": {
+        "componentName": "DeviceMirrorCloud",
+        "filePath": "components/DeviceMirrorCloud.tsx"
+      },
+      "hash": "a268857018f1",
+      "location": {
+        "filePath": "components/DeviceMirrorCloud.tsx",
+        "line": 770,
+        "column": 48
+      }
+    },
+    "17c3715812ab": {
+      "type": "content",
+      "sourceText": "Check Android version",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "17c3715812ab",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 193,
+        "column": 13
+      }
+    },
+    "aca976f160d5": {
+      "type": "content",
+      "sourceText": "List tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "aca976f160d5",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 201,
+        "column": 30
+      }
+    },
+    "8fa2a2a79382": {
+      "type": "content",
+      "sourceText": "Organize tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "8fa2a2a79382",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 202,
+        "column": 34
+      }
+    },
+    "0aeb50396c39": {
+      "type": "content",
+      "sourceText": "Close old tabs",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "0aeb50396c39",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 203,
+        "column": 31
+      }
+    },
+    "c7bb6b9b065b": {
+      "type": "content",
+      "sourceText": "Merge duplicates",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "c7bb6b9b065b",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 204,
+        "column": 31
+      }
+    },
+    "c01bc8d5be3f": {
+      "type": "content",
+      "sourceText": "List tab sessions",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "c01bc8d5be3f",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 205,
+        "column": 34
+      }
+    },
+    "eaf19233ae1e": {
+      "type": "content",
+      "sourceText": "Job portals",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "eaf19233ae1e",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 206,
+        "column": 33
+      }
+    },
+    "deca7963de74": {
+      "type": "content",
+      "sourceText": "Google Sheets apps",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "deca7963de74",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 209,
+        "column": 13
+      }
+    },
+    "e9e56beec69a": {
+      "type": "content",
+      "sourceText": "Gateway health",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "e9e56beec69a",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 217,
+        "column": 27
+      }
+    },
+    "47083afc2daa": {
+      "type": "content",
+      "sourceText": "Drop to Upload",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "47083afc2daa",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 272,
+        "column": 12
+      }
+    },
+    "abb35f54c849": {
+      "type": "content",
+      "sourceText": "How can I help you,<br0></br0><span0>Iron Claw?</span0>",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "abb35f54c849",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 282,
+        "column": 14
+      }
+    },
+    "9b6c6853d403": {
+      "type": "content",
+      "sourceText": "Neural Protocol V2.5 Active & Synced",
+      "context": {
+        "componentName": "ChatArea",
+        "filePath": "components/ChatArea.tsx"
+      },
+      "hash": "9b6c6853d403",
+      "location": {
+        "filePath": "components/ChatArea.tsx",
+        "line": 286,
+        "column": 14
+      }
+    },
+    "7b6975b22d69": {
+      "type": "attribute",
+      "sourceText": "Type your message here...",
+      "context": {
+        "attributeName": "placeholder",
+        "componentName": "ChatInput",
+        "filePath": "components/ChatInput.tsx"
+      },
+      "hash": "7b6975b22d69",
+      "location": {
+        "filePath": "components/ChatInput.tsx",
+        "line": 80,
+        "column": 10
+      }
+    },
+    "369f7fc2af53": {
+      "type": "attribute",
+      "sourceText": "Attach",
+      "context": {
+        "attributeName": "title",
+        "componentName": "ChatInput",
+        "filePath": "components/ChatInput.tsx"
+      },
+      "hash": "369f7fc2af53",
+      "location": {
+        "filePath": "components/ChatInput.tsx",
+        "line": 146,
+        "column": 14
+      }
+    },
+    "8387e6f6b42f": {
+      "type": "content",
+      "sourceText": "Browser",
+      "context": {
+        "componentName": "BrowserLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "8387e6f6b42f",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 11,
+        "column": 27
+      }
+    },
+    "e3ba30599dd4": {
+      "type": "content",
+      "sourceText": "Career",
+      "context": {
+        "componentName": "CareerLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "e3ba30599dd4",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 12,
+        "column": 26
+      }
+    },
+    "5b63c96f0d81": {
+      "type": "content",
+      "sourceText": "Device",
+      "context": {
+        "componentName": "DeviceLabel",
+        "filePath": "components/CategoryPills.tsx"
+      },
+      "hash": "5b63c96f0d81",
+      "location": {
+        "filePath": "components/CategoryPills.tsx",
+        "line": 13,
+        "column": 26
+      }
+    }
+  },
+  "stats": {
+    "totalEntries": 81,
+    "lastUpdated": "2026-02-02T19:43:15.101Z"
+  }
+}

@@ -91,7 +91,7 @@ const Index = () => {
         >
           <div className="relative h-full flex flex-col z-10">
             {/* Render appropriate mirror based on mode */}
-            {mode === 'local' ? <DeviceMirrorWebRTC /> : <DeviceMirrorCloud />}
+            {mode === 'local' ? <DeviceMirrorWebRTC onClose={() => setShowPhone(false)} /> : <DeviceMirrorCloud />}
 
             <button
               onClick={() => setShowPhone(false)}

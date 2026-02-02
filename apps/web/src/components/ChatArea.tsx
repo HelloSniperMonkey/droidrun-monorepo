@@ -263,7 +263,7 @@ export const ChatArea = ({
       className="flex-1 flex flex-col h-screen bg-background relative overflow-hidden grain"
       onDrop={handleDrop} onDragOver={handleDragOver} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave}
     >
-      <div className="absolute inset-0 mesh-gradient opacity-20 z-0" />
+      <div className="absolute inset-0 mesh-gradient z-0" />
 
       {isDragging && (
         <div className="absolute inset-0 bg-brand-pink/5 backdrop-blur-xl border-2 border-dashed border-brand-pink/20 z-50 flex items-center justify-center animate-in fade-in duration-300">
@@ -277,11 +277,13 @@ export const ChatArea = ({
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative z-10 custom-scrollbar">
         {isEmptyState ? (
           <div className="flex flex-col items-center justify-center min-h-full px-8 py-24 max-w-4xl mx-auto space-y-12">
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4 uppercase">
-                How can I help you, <span className="text-brand-pink">Iron Claw?</span>
+            <div className="text-center space-y-6 relative z-10">
+              <div className="absolute inset-0 bg-brand-pink/20 blur-[100px] rounded-full opacity-20 pointer-events-none" />
+              <h1 className="text-5xl md:text-7xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-8 uppercase text-center drop-shadow-2xl relative">
+                How can I help you,<br />
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-pink via-purple-500 to-brand-cyan animate-gradient-x bg-[length:200%_auto]">Iron Claw?</span>
               </h1>
-              <p className="text-white/30 font-medium max-w-lg mx-auto uppercase tracking-widest text-[10px]">
+              <p className="text-white/40 font-bold max-w-lg mx-auto uppercase tracking-[0.2em] text-xs glass-panel px-4 py-2 rounded-full border border-white/5 inline-block">
                 Neural Protocol V2.5 Active & Synced
               </p>
             </div>
@@ -332,7 +334,17 @@ export const ChatArea = ({
                           ))}
                         </div>
                       )}
-                      <div className="text-sm md:text-base leading-relaxed text-white">{message.content}</div>
+                      <div className="text-sm md:text-base leading-relaxed text-white">
+                        {message.content === "…" ? (
+                          <div className="flex gap-2 items-center py-2 min-h-[1.5rem]">
+                            <div className="w-3 h-3 bg-brand-pink rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                            <div className="w-3 h-3 bg-brand-pink rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                            <div className="w-3 h-3 bg-brand-pink rounded-full animate-bounce"></div>
+                          </div>
+                        ) : (
+                          message.content
+                        )}
+                      </div>
                       {message.role === "assistant" && message.steps && message.steps.length > 0 && (
                         <div className="mt-6 space-y-3">
                           {message.steps.map((step, idx) => (

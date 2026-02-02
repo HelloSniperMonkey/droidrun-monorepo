@@ -8,6 +8,7 @@ import {
     Volume2,
     VolumeX,
     Activity,
+    X,
     Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ type ConnectionState = 'disconnected' | 'connecting' | 'signaling' | 'connected'
 
 const SIGNALING_URL = "ws://localhost:8082/browser";
 
-export const DeviceMirrorWebRTC = () => {
+export const DeviceMirrorWebRTC = ({ onClose }: { onClose?: () => void }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
@@ -602,8 +603,8 @@ export const DeviceMirrorWebRTC = () => {
                             <span className="text-[8px] font-black text-purple-400/60 uppercase tracking-tighter">{bitrate} kbps</span>
                         </div>
                     )}
-                    <button onClick={toggleFullscreen} className="p-2 rounded-lg text-white/20 hover:text-white transition-colors">
-                        {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                    <button onClick={onClose} className="p-2 rounded-lg text-white/20 hover:text-white transition-colors">
+                        <X className="h-4 w-4" />
                     </button>
                 </div>
             </div>
