@@ -13,6 +13,8 @@ export const AttachmentPreview = ({ attachments, onRemove }: AttachmentPreviewPr
     <div className="flex gap-3 items-start px-2 pt-3 pb-3 overflow-x-auto">
       {attachments.map((file) => {
         const isImage = file.kind === "image" && file.previewUrl;
+        const extension = (file.name?.split(".").pop() || file.kind || "FILE").toUpperCase();
+        const isPdf = extension === "PDF" || file.kind === "pdf";
         return (
           <div
             key={file.id}
@@ -30,13 +32,13 @@ export const AttachmentPreview = ({ attachments, onRemove }: AttachmentPreviewPr
                   className="h-16 w-16 rounded-xl object-cover"
                 />
               ) : (
-                <div className="h-14 w-14 rounded-xl bg-red-500/90 flex items-center justify-center text-white text-xs font-semibold">
-                  PDF
+                <div className={`h-14 w-14 rounded-xl flex items-center justify-center text-xs font-semibold ${isPdf ? "bg-red-500/90 text-white" : "bg-white/10 text-white/70"}`}>
+                  {extension}
                 </div>
               )}
               <div className="max-w-[200px]">
                 <p className="text-sm font-semibold text-foreground truncate">{file.name}</p>
-                <p className="text-xs text-muted-foreground uppercase">{file.kind}</p>
+                <p className="text-xs text-muted-foreground uppercase">{extension}</p>
               </div>
             </div>
             <button
