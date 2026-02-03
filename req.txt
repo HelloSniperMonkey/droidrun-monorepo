@@ -72,12 +72,12 @@ httptools==0.7.1
 httpx==0.28.1
 idna==3.11
 importlib-metadata==8.7.1
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo/packages/adb-client
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo/apps/gateway
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo/apps/job-hunter
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo/packages/shared
--e file:///Users/soumyayotimohanta/Developer/hackathon/monorepo/packages/vapi-client
+-e ./packages/adb-client
+-e ./apps/gateway
+-e ./apps/job-hunter
+-e .
+-e ./packages/shared
+-e ./packages/vapi-client
 itsdangerous==2.2.0
 jinja2==3.1.6
 jiter==0.12.0
